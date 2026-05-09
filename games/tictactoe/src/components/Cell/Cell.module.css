@@ -1,0 +1,66 @@
+/* Cell Styles */
+.ttt-cell {
+  aspect-ratio: 1;
+  min-height: 76px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ttt-cell:not(.disabled) {
+  cursor: pointer;
+}
+
+.ttt-cell.disabled,
+.ttt-cell.filled {
+  cursor: default;
+}
+
+.ttt-cell-hover {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.ttt-cell:hover:not(:disabled) .ttt-cell-hover {
+  opacity: 1 !important;
+}
+
+.ttt-cell-value {
+  font-size: clamp(28px, 4vw, 52px);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+  animation: cellPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.ttt-cell-value.val-x {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ttt-cell-value.val-o {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.ttt-cell-value.val-winning {
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes cellPop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

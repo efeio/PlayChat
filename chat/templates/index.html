@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayChat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="bg-glow bg-glow-left"></div>
+    <div class="bg-glow bg-glow-right"></div>
+    <div class="grid-overlay"></div>
+
+    <main class="app-shell">
+        <header class="app-header">
+            <h1><span>PlayChat</span></h1>
+            <p>asdaaffsdfssfdsf</p>
+            <div class="theme-chip">Live Room</div>
+        </header>
+
+        <section id="login-panel" class="panel">
+            <h2>Giriş</h2>
+            <form id="login-form">
+                <label for="username-input">Kullanıcı adı</label>
+                <input id="username-input" type="text" maxlength="24" placeholder="Örn: Burak" required>
+                <button type="submit">Sohbete Katıl</button>
+            </form>
+        </section>
+
+        <section id="chat-panel" class="panel hidden">
+            <div class="chat-top">
+                <div>
+                    <h2>Ortak Oda</h2>
+                    <span id="active-user"></span>
+                </div>
+                <div class="live-pill">
+                    <span class="live-dot"></span>
+                    <span>Canli</span>
+                </div>
+            </div>
+
+            <div id="messages" class="messages"></div>
+            <div id="typing-indicator" class="typing-indicator hidden">Birisi yaziyor...</div>
+
+            <form id="message-form" class="message-form">
+                <input id="message-input" type="text" maxlength="300" placeholder="Mesajını yaz..." autocomplete="off" required>
+                <button type="submit">Gönder</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

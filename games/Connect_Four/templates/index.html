@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Four</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page page--home">
+  <main class="card card--intro">
+    <h1>Connect Four</h1>
+    <p class="lede">Two players take turns. Open each link in a separate browser or device.</p>
+    <div class="player-picks">
+      <a class="btn btn--p1" href="{{ url_for('play', player=1) }}">Play as Player 1</a>
+      <a class="btn btn--p2" href="{{ url_for('play', player=2) }}">Play as Player 2</a>
+    </div>
+    <p class="hint">Share your screen or send the other link to your opponent.</p>
+  </main>
+</body>
+</html>

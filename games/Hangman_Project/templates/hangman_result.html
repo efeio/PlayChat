@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Adam Asmaca — Sonuç{% endblock %}
+{% block body %}
+<div class="card">
+  <h1>Sonuç</h1>
+  <p style="font-size:1.1rem;">{{ message }}</p>
+  <p>Gizli kelime: <strong style="letter-spacing:.12em;">{{ word }}</strong></p>
+  <p class="muted">Kuran: {{ player_setter }} · Tahmin eden: {{ player_guesser }} · Yanlış sayısı: {{ wrong }}</p>
+  {% if guessed_sorted %}
+  <p class="muted">Denenen harfler: {{ guessed_sorted | join(', ') }}</p>
+  {% endif %}
+  <p style="margin-top:1.25rem;">
+    <a class="btn" href="{{ url_for('hangman_menu') }}">Yeni oyun</a>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}" style="margin-left:.5rem;">Hub’a dön</a>
+  </p>
+</div>
+{% endblock %}

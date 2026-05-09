@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Adam Asmaca — Kurulum{% endblock %}
+{% block body %}
+<div class="card">
+  <h1>Adam Asmaca</h1>
+  <p class="muted">
+    <strong>Oyuncu 1</strong> gizli kelimeyi yazar; aynı cihazda <strong>Oyuncu 2</strong> harf tahmin eder.
+    Şifre alanı kelimeyi maskeleyerek yazmanıza yardımcı olur — kurulumdan sonra ekranı tahmin eden oyuncuya verin.
+  </p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="{{ url_for('hangman_start') }}">
+    <label for="player1">Kelimeyi yazan oyuncu</label>
+    <input type="text" id="player1" name="player1" value="{{ player1 or '' }}" placeholder="Örn. Ayşe" autocomplete="off">
+
+    <label for="player2">Tahmin eden oyuncu</label>
+    <input type="text" id="player2" name="player2" value="{{ player2 or '' }}" placeholder="Örn. Mehmet" autocomplete="off">
+
+    <label for="secret_word">Gizli kelime</label>
+    <input type="password" id="secret_word" name="secret_word" autocomplete="off" placeholder="Sadece harf (Türkçe olabilir)">
+
+    <button type="submit">Oyunu başlat</button>
+  </form>
+</div>
+{% endblock %}

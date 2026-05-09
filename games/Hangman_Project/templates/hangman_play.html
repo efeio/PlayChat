@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Adam Asmaca — Tahmin{% endblock %}
+{% block extra_css %}
+<style>
+  @media (min-width: 700px) {
+    .wrap { max-width: 50rem; }
+  }
+  .hangman-play-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+  @media (min-width: 700px) {
+    .hangman-play-layout {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+  .hangman-play-main { flex: 1; min-width: 0; }
+  .hangman-figure-wrap {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: .75rem;
+    background: #000000;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .hangman-svg {
+    width: 150px;
+    height: 200px;
+    overflow: visible;
+  }
+  @media (min-width: 700px) {
+    .hangman-svg { width: 170px; height: 220px; }
+  }
+  .hangman-part {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .hangman-part.is-visible {
+    opacity: 1;
+    animation: hangman-pop 0.45s ease;
+  }
+  @keyframes hangman-pop {
+    0% { opacity: 0; }
+    40% { opacity: 1; filter: drop-shadow(0 0 8px rgba(255,255,255,.35)); }
+    100% { opacity: 1; filter: none; }
+  }
+</style>
+{% endblock %}
+{% block body %}
+<div class="card hangman-play-layout">
+  <div class="hangman-play-main">
+    <h1>{% if game_lost %}Haklar doldu{% else %}Tahmin sırası: {{ player_guesser }}{% endif %}</h1>
+    <p class="muted">{% if game_lost %}{{ player_guesser }} — yanlış tahmin limiti aşıldı.{% else %}Kelimeyi {{ player_setter }} seçti. Yanlış hakkı: <strong>{{ remaining }}</strong> / {{ max_wrong }}{% endif %}</p>
+
+    <div class="pattern">{{ pattern }}</div>
+
+    <div class="stats">
+      <span class="pill">Yanlış: {{ wrong }}</span>
+      {% if guessed_sorted %}
+      <span class="pill">Denenen: {{ guessed_sorted | join(', ') }}</span>
+      {% endif %}
+    </div>
+
+    {% if not game_lost %}
+    <form class="inline-letter" method="post" action="{{ url_for('hangman_play') }}">
+      <label for="letter" style="display:inline;">Harf</label>
+      <input type="text" id="letter" name="letter" maxlength="8" autocomplete="off" autofocus
+             placeholder="A" pattern="[a-zA-ZğüşıöçĞÜŞİÖÇ]{1,8}" title="Bir harf">
+      <button type="submit">Tahmin et</button>
+    </form>
+    <p class="muted" style="margin-top:1rem;">İpucu: Türkçe kelimede İ ve I farklı harftir.</p>
+    {% else %}
+    <p style="margin-top:1rem;">
+      <a class="btn" href="{{ url_for('hangman_result', outcome='lose') }}">Sonuç ekranına git</a>
+    </p>
+    {% endif %}
+  </div>
+
+  <div class="hangman-figure-wrap" aria-hidden="true">
+    <svg class="hangman-svg" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#8b9cb3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="142" x2="102" y2="142"/>
+        <line x1="38" y1="142" x2="38" y2="28"/>
+        <line x1="38" y1="28" x2="88" y2="28"/>
+        <line x1="88" y1="28" x2="88" y2="42"/>
+      </g>
+      <g class="hangman-part{% if wrong >= 1 %} is-visible{% endif %}" stroke="#5bcefa" stroke-width="2.6" stroke-linecap="round">
+        <circle cx="88" cy="54" r="11" fill="none"/>
+      </g>
+      <g class="hangman-part{% if wrong >= 2 %} is-visible{% endif %}" stroke="#5bcefa" stroke-width="2.6" stroke-linecap="round">
+        <line x1="88" y1="65" x2="88" y2="102"/>
+      </g>
+      <g class="hangman-part{% if wrong >= 3 %} is-visible{% endif %}" stroke="#5bcefa" stroke-width="2.6" stroke-linecap="round">
+        <line x1="88" y1="78" x2="68" y2="96"/>
+      </g>
+      <g class="hangman-part{% if wrong >= 4 %} is-visible{% endif %}" stroke="#5bcefa" stroke-width="2.6" stroke-linecap="round">
+        <line x1="88" y1="78" x2="108" y2="96"/>
+      </g>
+      <g class="hangman-part{% if wrong >= 5 %} is-visible{% endif %}" stroke="#5bcefa" stroke-width="2.6" stroke-linecap="round">
+        <line x1="88" y1="102" x2="74" y2="136"/>
+      </g>
+      <g class="hangman-part{% if wrong >= 6 %} is-visible{% endif %}" stroke="#5bcefa" stroke-width="2.6" stroke-linecap="round">
+        <line x1="88" y1="102" x2="102" y2="136"/>
+      </g>
+    </svg>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Four — Player {{ player }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page page--game">
+  <header class="topbar">
+    <a class="link-back" href="{{ url_for('index') }}">Exit</a>
+    <div class="topbar__center">
+      <span class="badge badge--p{{ player }}" id="player-badge">Player {{ player }}</span>
+      <form class="nickname-form" id="nickname-form" autocomplete="off">
+        <label class="sr-only" for="nickname-input">Nickname</label>
+        <input type="text" id="nickname-input" name="nickname" maxlength="20" placeholder="Nickname" autocomplete="nickname">
+        <button type="submit" class="btn btn--mini btn--ghost">Save</button>
+      </form>
+    </div>
+    <span class="topbar__spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="layout">
+    <section class="panel panel--board">
+      <div class="turn-hud" id="turn-hud" aria-label="Game status">
+        <span class="turn-hud__marker" aria-hidden="true"></span>
+        <div class="turn-hud__body">
+          <div class="turn-hud__eyebrow">Turn</div>
+          <div class="status" id="status" aria-live="polite">Loading…</div>
+        </div>
+      </div>
+      <div class="board-wrap">
+        <div class="board" id="board" role="grid" aria-label="Connect Four board"></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn--restart" id="btn-reset" aria-label="Restart game — clears board and chat">Restart game</button>
+      </div>
+    </section>
+
+    <aside class="panel panel--chat">
+      <h2>Chat</h2>
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <form class="chat-form" id="chat-form">
+        <label class="sr-only" for="chat-input">Message</label>
+        <input type="text" id="chat-input" name="message" maxlength="500" placeholder="Type a message…" autocomplete="off">
+        <button type="submit" class="btn btn--send">Send</button>
+      </form>
+    </aside>
+  </main>
+
+  <script>
+    window.CONNECT_FOUR = { player: {{ player }} };
+  </script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>

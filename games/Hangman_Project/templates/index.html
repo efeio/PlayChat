@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Mini Oyunlar{% endblock %}
+{% block body %}
+<div class="card">
+  <h1>Mini Oyunlar</h1>
+  <p class="muted">Buraya zamanla yeni oyunlar eklenebilir.</p>
+  <h2>Mevcut</h2>
+  <ul>
+    <li><a href="{{ url_for('hangman_menu') }}">Adam Asmaca</a> — iki kişilik (kelimeyi bir oyuncu seçer, diğeri tahmin eder).</li>
+  </ul>
+</div>
+{% endblock %}

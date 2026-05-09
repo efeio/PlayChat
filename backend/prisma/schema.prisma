@@ -1,0 +1,115 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  displayName  String
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  provider     String   @default("LOCAL")
+  isOnline     Boolean  @default(false)
+  lastSeen     DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roomMembers  RoomMember[]
+  messages     Message[]
+  gamePlayers  GamePlayer[]
+  stats        UserStats?
+  notifications Notification[]
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("PUBLIC")
+  maxMembers  Int      @default(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     RoomMember[]
+  messages    Message[]
+  games       Game[]
+}
+
+model RoomMember {
+  id        String   @id @default(cuid())
+  userId    String
+  roomId    String
+  role      String   @default("MEMBER")
+  joinedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   @default("CHAT")
+  userId    String
+  roomId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model Game {
+  id         String   @id @default(cuid())
+  roomId     String
+  gameType   String
+  status     String   @default("WAITING")
+  state      String   @default("{}")
+  winnerId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  players    GamePlayer[]
+}
+
+model GamePlayer {
+  id       String @id @default(cuid())
+  gameId   String
+  userId   String
+  role     String @default("PLAYER")
+  playerIndex Int @default(0)
+
+  game     Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([gameId, userId])
+}
+
+model UserStats {
+  id          String @id @default(cuid())
+  userId      String @unique
+  gamesPlayed Int    @default(0)
+  gamesWon    Int    @default(0)
+  gamesLost   Int    @default(0)
+  gamesDraw   Int    @default(0)
+
+  user        User   @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}

@@ -1,0 +1,8 @@
+Bu projeyi çalıştırmak için (Komut İstemi veya PowerShell’de bu klasöre gidin):
+
+  pip install -r requirements.txt
+  python app.py
+
+Sonra tarayıcıda: http://127.0.0.1:5050/
+
+“python” tanınmıyorsa: py app.py

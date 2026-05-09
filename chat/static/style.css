@@ -1,0 +1,370 @@
+:root {
+    --bg-main: #0b0b0d;
+    --bg-panel: #17171d;
+    --line: rgba(255, 255, 255, 0.12);
+    --line-soft: rgba(255, 255, 255, 0.08);
+    --text: #f7f7fb;
+    --text-soft: #b4b4c0;
+    --accent: #9aa0b0;
+    --accent-soft: #7e8493;
+    --glass: rgba(24, 24, 30, 0.45);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(166, 170, 182, 0.42) rgba(255, 255, 255, 0.04);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    background:
+        radial-gradient(circle at 12% 15%, rgba(132, 138, 156, 0.1), transparent 42%),
+        radial-gradient(circle at 84% 86%, rgba(115, 122, 142, 0.09), transparent 45%),
+        linear-gradient(155deg, #09090b, #101015 46%, #14141a 100%);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.bg-glow {
+    position: fixed;
+    width: 460px;
+    height: 460px;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    opacity: 0.16;
+}
+
+.bg-glow-left {
+    background: rgba(116, 122, 142, 0.22);
+    top: -190px;
+    left: -140px;
+}
+
+.bg-glow-right {
+    background: rgba(106, 112, 130, 0.2);
+    right: -170px;
+    bottom: -220px;
+}
+
+.grid-overlay {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.25) 100%);
+    pointer-events: none;
+}
+
+.app-shell {
+    position: relative;
+    width: min(920px, 92vw);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 24px;
+    box-shadow:
+        0 20px 55px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 0 1px rgba(165, 169, 181, 0.07);
+    animation: shell-in 550ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.app-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+.app-header h1 span {
+    color: var(--accent);
+}
+
+.app-header p {
+    margin: 8px 0 0;
+    color: var(--text-soft);
+}
+
+.theme-chip {
+    display: inline-flex;
+    margin-top: 10px;
+    border: 1px solid rgba(159, 164, 178, 0.34);
+    border-radius: 999px;
+    padding: 5px 10px;
+    color: #d5d8e1;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(140, 146, 161, 0.08);
+}
+
+.panel {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 18px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hidden {
+    display: none;
+}
+
+h2 {
+    margin: 0 0 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ebebef;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-soft);
+    font-size: 0.9rem;
+}
+
+input {
+    width: 100%;
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    background: rgba(9, 9, 12, 0.55);
+    color: var(--text);
+    padding: 12px 13px;
+    outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+input:focus {
+    border-color: rgba(160, 165, 178, 0.7);
+    background: rgba(13, 13, 17, 0.75);
+    box-shadow: 0 0 0 3px rgba(160, 165, 178, 0.14);
+}
+
+button {
+    margin-top: 12px;
+    border: 1px solid rgba(162, 167, 181, 0.45);
+    border-radius: 10px;
+    background: linear-gradient(130deg, rgba(152, 157, 172, 0.16), rgba(152, 157, 172, 0.05));
+    color: var(--text);
+    padding: 10px 16px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+button:hover {
+    border-color: rgba(178, 182, 194, 0.62);
+    background: linear-gradient(130deg, rgba(164, 170, 186, 0.24), rgba(164, 170, 186, 0.1));
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.chat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+}
+
+.live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-soft);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9aa0b0;
+}
+
+#active-user {
+    color: var(--accent);
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-top: 2px;
+}
+
+.messages {
+    margin-top: 14px;
+    height: 380px;
+    overflow-y: auto;
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 12px;
+    background:
+        linear-gradient(165deg, rgba(10, 10, 14, 0.68), rgba(18, 18, 25, 0.5));
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.message-item {
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    animation: message-in 260ms ease-out;
+}
+
+.message-item:hover {
+    border-color: rgba(170, 174, 186, 0.45);
+    transform: translateX(2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.message-author {
+    color: var(--accent);
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.message-time {
+    margin-left: 10px;
+    color: var(--text-soft);
+    font-size: 0.75rem;
+}
+
+.typing-indicator {
+    margin-top: 8px;
+    min-height: 18px;
+    color: var(--text-soft);
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    opacity: 0.86;
+    transition: opacity 0.25s ease;
+}
+
+.message-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-top: 12px;
+    transition: transform 0.25s ease;
+}
+
+.message-form.focused {
+    transform: translateY(-1px);
+}
+
+.message-form button {
+    margin: 0;
+    height: 100%;
+}
+
+.messages::-webkit-scrollbar {
+    width: 10px;
+}
+
+.messages::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: rgba(160, 165, 178, 0.42);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(176, 180, 192, 0.6);
+    background-clip: content-box;
+}
+
+body::-webkit-scrollbar,
+.messages::-webkit-scrollbar {
+    width: 11px;
+}
+
+body::-webkit-scrollbar-track,
+.messages::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+body::-webkit-scrollbar-thumb {
+    background: rgba(162, 166, 179, 0.42);
+    border-radius: 10px;
+}
+
+@keyframes shell-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes message-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 720px) {
+    .app-shell {
+        padding: 16px;
+    }
+
+    .messages {
+        height: 300px;
+    }
+
+    .message-form {
+        grid-template-columns: 1fr;
+    }
+}
