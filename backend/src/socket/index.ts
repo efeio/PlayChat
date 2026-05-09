@@ -19,15 +19,19 @@ export function initSocket(httpServer: HttpServer): Server {
     socket.on('authenticate', (data: { token: string }, callback?: (res: { error?: string }) => void) => {
       try {
         const decoded = jwt.verify(data.token, env.JWT_SECRET) as JwtPayload;
-        socket.data.userId = decoded.userId;
-        socket.data.username = decoded.username;
 
-        /* INV-008: Cancel any pending disconnect timer */
-        cancelDisconnectTimer(decoded.userId);
+        /* Prevent duplicate handler registration on multiple authentications */
+        if (!socket.data.userId) {
+          socket.data.userId = decoded.userId;
+          socket.data.username = decoded.username;
 
-        /* Register handlers after authentication */
-        registerRoomHandlers(io, socket);
-        registerGameHandlers(io, socket);
+          /* INV-008: Cancel any pending disconnect timer */
+          cancelDisconnectTimer(decoded.userId);
+
+          /* Register handlers after authentication */
+          registerRoomHandlers(io, socket);
+          registerGameHandlers(io, socket);
+        }
 
         socket.emit('authenticated', { userId: decoded.userId, username: decoded.username });
         if (callback) callback({});

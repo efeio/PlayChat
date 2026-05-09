@@ -285,7 +285,13 @@ export function registerGameHandlers(io: Server, socket: Socket) {
   });
 
   /* INV-008: Handle disconnect timeout for active games */
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
+    /* Check if the user has other active sockets before starting the disconnect timer */
+    const allSockets = await io.fetchSockets();
+    const hasOtherSockets = allSockets.some((s) => (s.data as { userId: string }).userId === userId && s.id !== socket.id);
+
+    if (hasOtherSockets) return;
+
     for (const [gameId, game] of activeGames.entries()) {
       const state = game.state as { players?: string[] };
       if (state.players && state.players.includes(userId)) {

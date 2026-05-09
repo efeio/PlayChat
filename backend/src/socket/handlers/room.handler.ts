@@ -211,6 +211,15 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         return;
       }
 
+      const existingGlobalMembership = await prisma.roomMember.findFirst({
+        where: { userId }
+      });
+
+      if (existingGlobalMembership && existingGlobalMembership.roomId !== roomId) {
+         if (callback) callback({ error: 'You are already in another room. Leave it first.' });
+         return;
+      }
+
       const room = await prisma.room.findUnique({
         where: { id: roomId },
         include: {
@@ -269,12 +278,25 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
     const roomId = data?.roomId || socketRoomMap.get(socket.id);
     if (!roomId) return;
 
-    /* Don't delete membership from DB — just leave the socket room.
-       Membership (including OWNER role) is persistent. */
+    await removeMemberFromRoom(roomId, userId);
+
     socket.leave(roomId);
     socketRoomMap.delete(socket.id);
 
     socket.to(roomId).emit('room:user_left', { userId, username });
+
+    /* Emit room:updated */
+    const updatedRoom = await prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        members: {
+          include: { user: { select: { id: true, username: true, displayName: true } } },
+        },
+      },
+    });
+    if (updatedRoom) {
+      io.to(roomId).emit('room:updated', updatedRoom);
+    }
   });
 
   socket.on('message:send', async (data: { roomId: string; content: string }) => {
@@ -301,7 +323,13 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
     const roomId = socketRoomMap.get(socket.id);
     if (roomId) {
       socketRoomMap.delete(socket.id);
-      socket.to(roomId).emit('room:user_left', { userId, username });
+
+      const socketsInRoom = await io.in(roomId).fetchSockets();
+      const hasOtherSockets = socketsInRoom.some((s) => (s.data as { userId: string }).userId === userId);
+
+      if (!hasOtherSockets) {
+        socket.to(roomId).emit('room:user_left', { userId, username });
+      }
     }
   });
 }

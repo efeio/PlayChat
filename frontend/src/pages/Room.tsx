@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
@@ -282,16 +282,16 @@ export function Room() {
   }, [socket, roomId, activeGameId, addToast]);
 
   /* Check if current user is room owner */
-  const isOwner = myRole === 'OWNER' || members.some((m) => m.userId === user?.id && m.role === 'OWNER');
+  const isOwner = useMemo(() => myRole === 'OWNER' || members.some((m) => m.userId === user?.id && m.role === 'OWNER'), [myRole, members, user?.id]);
 
   /* Build player display list */
-  const playerDisplayList = gamePlayers.map((gp) => ({
+  const playerDisplayList = useMemo(() => gamePlayers.map((gp) => ({
     userId: gp.userId,
     displayName: gp.user.displayName,
-  }));
+  })), [gamePlayers]);
 
   /* Render game component */
-  const renderGame = () => {
+  const renderGame = useCallback(() => {
     if (!gameState || !activeGameType || !user) return null;
 
     const commonProps = {
@@ -312,7 +312,7 @@ export function Room() {
       default:
         return null;
     }
-  };
+  }, [gameState, activeGameType, user, handleMove, playerDisplayList]);
 
   if (!room || isLoadingState || stateRecoveryError) {
     return (

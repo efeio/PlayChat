@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
 
@@ -18,9 +19,12 @@ const SocketContext = createContext<SocketContextValue>({
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const { token, isAuthenticated: authReady } = useAuth();
+  const { addToast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isSocketAuthenticated, setIsSocketAuthenticated] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  // Track if we were previously connected to distinguish initial connect from reconnect
+  const wasConnectedRef = useRef(false);
 
   useEffect(() => {
     if (!authReady || !token) {
@@ -42,6 +46,12 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     socket.on('connect', () => {
       setIsConnected(true);
+
+      if (wasConnectedRef.current) {
+         addToast('success', 'Bağlantı tekrar sağlandı.');
+      }
+      wasConnectedRef.current = true;
+
       /* Immediately authenticate */
       socket.emit('authenticate', { token });
     });
@@ -50,9 +60,27 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       setIsSocketAuthenticated(true);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
       setIsConnected(false);
       setIsSocketAuthenticated(false);
+      if (reason === 'io server disconnect') {
+        // the disconnection was initiated by the server
+        addToast('error', 'Sunucu tarafından bağlantı kesildi.');
+      } else if (reason === 'transport close' || reason === 'ping timeout') {
+        addToast('error', 'Bağlantı koptu, yeniden bağlanılıyor...');
+      }
+    });
+
+    socket.on('connect_error', (err) => {
+      // Prevents spamming toast if we continuously fail to connect
+      if (wasConnectedRef.current) {
+         addToast('error', 'Bağlantı hatası: ' + err.message);
+         wasConnectedRef.current = false;
+      }
+    });
+
+    socket.on('error', (err: { message: string }) => {
+      addToast('error', err.message || 'Soket hatası');
     });
 
     return () => {
