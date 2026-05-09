@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type RPSChoice = 'rock' | 'paper' | 'scissors';
 
@@ -39,9 +39,11 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
   };
 
   /* Reset selected when new round starts */
-  if (!hasChosen && selected !== null) {
-    setSelected(null);
-  }
+  useEffect(() => {
+    if (!hasChosen && selected !== null) {
+      setSelected(null);
+    }
+  }, [hasChosen, selected]);
 
   return (
     <div className="flex flex-col items-center gap-6">
