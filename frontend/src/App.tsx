@@ -88,11 +88,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <SocketProvider>
-          <ToastProvider>
+        <ToastProvider>
+          <SocketProvider>
             <AppRoutes />
-          </ToastProvider>
-        </SocketProvider>
+          </SocketProvider>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

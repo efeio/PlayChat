@@ -39,7 +39,7 @@ describe('Toast Component', () => {
 
     const toast = container.firstChild as HTMLElement;
     expect(toast).toHaveClass('border-red-500');
-    expect(screen.getByText('✕')).toBeInTheDocument();
+    // Removing the text matchers as we changed the icon to be an SVG instead of text
   });
 
   it('renders success toast with correct styling', () => {
@@ -55,7 +55,6 @@ describe('Toast Component', () => {
 
     const toast = container.firstChild as HTMLElement;
     expect(toast).toHaveClass('border-green-500');
-    expect(screen.getByText('✓')).toBeInTheDocument();
   });
 
   it('renders warning toast with correct styling', () => {
@@ -71,7 +70,6 @@ describe('Toast Component', () => {
 
     const toast = container.firstChild as HTMLElement;
     expect(toast).toHaveClass('border-yellow-500');
-    expect(screen.getByText('⚠')).toBeInTheDocument();
   });
 
   it('auto-dismisses after 4 seconds by default', () => {

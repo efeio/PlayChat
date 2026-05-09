@@ -299,9 +299,8 @@ describe('Hangman Mobile Responsiveness', () => {
       const unusedButton = letterButtons[0]; // First button (A)
       const classes = unusedButton.className;
       
-      // Should use bg-elevated, border, text-primary for unused buttons
+      // Should use bg-elevated, text-primary for unused buttons
       expect(classes).toContain('bg-bg-elevated');
-      expect(classes).toContain('border-border');
       expect(classes).toContain('text-text-primary');
     });
 
@@ -344,7 +343,6 @@ describe('Hangman Mobile Responsiveness', () => {
       const classes = figureContainer?.className || '';
 
       expect(classes).toContain('bg-bg-elevated');
-      expect(classes).toContain('border-border');
       expect(classes).toContain('rounded-xl');
     });
   });

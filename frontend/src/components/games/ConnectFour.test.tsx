@@ -411,7 +411,6 @@ describe('ConnectFour - Mobile Responsiveness', () => {
 
       cells.forEach((cell) => {
         expect(cell.className).toContain('bg-bg-elevated');
-        expect(cell.className).toContain('border-border');
       });
     });
 

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
 
@@ -18,6 +19,7 @@ const SocketContext = createContext<SocketContextValue>({
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const { token, isAuthenticated: authReady } = useAuth();
+  const { addToast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isSocketAuthenticated, setIsSocketAuthenticated] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -50,9 +52,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       setIsSocketAuthenticated(true);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
       setIsConnected(false);
       setIsSocketAuthenticated(false);
+      if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
+        addToast('error', 'Connection to server lost. Reconnecting...');
+      }
+    });
+
+    socket.on('connect_error', (error) => {
+      addToast('error', `Connection error: ${error.message}`);
     });
 
     return () => {

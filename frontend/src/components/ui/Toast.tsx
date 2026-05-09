@@ -21,13 +21,13 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
   const getTypeStyles = () => {
     switch (type) {
       case 'error':
-        return 'border-red-500/30 bg-red-500/10 text-red-400';
+        return 'border-red-500';
       case 'success':
-        return 'border-accent-green/30 bg-accent-green/10 text-accent-green';
+        return 'border-green-500';
       case 'warning':
-        return 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400';
+        return 'border-yellow-500';
       default:
-        return 'border-border bg-bg-surface text-text-primary';
+        return 'border-border';
     }
   };
 
@@ -61,8 +61,10 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
 
   return (
     <div
+      role="alert"
+      aria-live="polite"
       onClick={() => onDismiss(id)}
-      className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[320px] max-w-md`}
+      className={`flex items-start gap-3 px-4 py-3 rounded-lg bg-bg-surface text-text-primary border ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[320px] max-w-md`}
     >
       <div className="shrink-0 mt-0.5">{getIcon()}</div>
       <p className="text-sm flex-1 leading-snug">{message}</p>

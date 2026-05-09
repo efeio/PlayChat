@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
@@ -78,17 +78,13 @@ export function Room() {
   const [activeGameType, setActiveGameType] = useState<GameType | null>(null);
   const [gameState, setGameState] = useState<Record<string, unknown> | null>(null);
   const [gamePlayers, setGamePlayers] = useState<GamePlayer[]>([]);
+  const gamePlayersRef = useRef<GamePlayer[]>([]);
   const [gameResult, setGameResult] = useState<GameEndEvent | null>(null);
   const [stateRecoveryError, setStateRecoveryError] = useState<string | null>(null);
 
-  /* Fetch room data */
   useEffect(() => {
-    if (!roomId || !token) return;
-    api.get<RoomType>(`/api/rooms/${roomId}`, token).then((data) => {
-      setRoom(data);
-      setMembers(data.members);
-    }).catch(() => navigate('/dashboard'));
-  }, [roomId, token, navigate]);
+    gamePlayersRef.current = gamePlayers;
+  }, [gamePlayers]);
 
   /* Join room via socket */
   useEffect(() => {
@@ -234,12 +230,8 @@ export function Room() {
       if (data.result === 'draw') {
         addToast('success', 'Game ended in a draw!');
       } else if (data.winnerId) {
-        // Use gamePlayers state directly to avoid stale closure
-        setGamePlayers((currentPlayers) => {
-          const winner = currentPlayers.find((p) => p.userId === data.winnerId);
-          addToast('success', `${winner?.user.displayName || 'Player'} wins!`);
-          return currentPlayers;
-        });
+        const winner = gamePlayersRef.current.find((p) => p.userId === data.winnerId);
+        addToast('success', `${winner?.user.displayName || 'Player'} wins!`);
       }
       
       if (data.reason === 'disconnect_timeout') {

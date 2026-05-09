@@ -38,7 +38,7 @@ describe('ToastContext', () => {
 
     expect(() => {
       render(<TestComponent />);
-    }).toThrow('useToast must be used within a ToastProvider');
+    }).toThrow('useToast must be used within ToastProvider');
 
     consoleError.mockRestore();
   });

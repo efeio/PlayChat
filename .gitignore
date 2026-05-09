@@ -1,3 +1,9 @@
 node_modules/
 .env
-.DS_Store
+.DS_Storebackend/dist/
+frontend/dist/
+frontend/frontend_output.log
+backend/backend_output.log
+node_modules/
+dist/
+__pycache__/
