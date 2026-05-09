@@ -58,7 +58,6 @@ if [ "$AUTH_RUNNING" = false ] || [ "$BACKEND_RUNNING" = false ] || [ "$FRONTEND
     echo ""
     
     if [ "$AUTH_RUNNING" = false ]; then
-        echo "  Terminal 1: cd auth && node server.js"
     fi
     
     if [ "$BACKEND_RUNNING" = false ]; then

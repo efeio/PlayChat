@@ -4,7 +4,7 @@ import {
   addMemberToRoom,
   removeMemberFromRoom,
 } from '../../services/room.service.js';
-import { activeGames } from './game.handler.js';
+import { activeGames, gameEngines } from './game.handler.js';
 import type { GameState } from '../../games/GameEngine.js';
 
 /* INV-001: Track which room each socket is in */
@@ -144,6 +144,17 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         } else {
           /* Game exists in DB but not in memory - reconstruct from DB */
           const state = JSON.parse(activeGameRecord.state) as GameState;
+
+          /* Rehydrate activeGames map */
+          const engine = gameEngines[activeGameRecord.gameType];
+          if (engine) {
+            activeGames.set(activeGameRecord.id, {
+              engine,
+              state,
+              gameId: activeGameRecord.id
+            });
+          }
+
           activeGame = {
             gameId: activeGameRecord.id,
             gameType: activeGameRecord.gameType,

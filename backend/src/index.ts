@@ -26,7 +26,7 @@ async function main() {
 
   /* Room routes */
   app.get('/api/rooms', list);
-  app.post('/api/rooms', { preHandler: [authenticate] }, create);
+  app.post<{ Body: { name: string; type?: string; maxMembers?: number; } }>('/api/rooms', { preHandler: [authenticate] }, create);
   app.get<{ Params: { id: string } }>('/api/rooms/:id', getById);
 
   /* Health check */

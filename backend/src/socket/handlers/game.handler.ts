@@ -6,7 +6,7 @@ import { ConnectFour } from '../../games/ConnectFour.js';
 import { RockPaperScissors } from '../../games/RockPaperScissors.js';
 import { Hangman } from '../../games/Hangman.js';
 
-const gameEngines: Record<string, GameEngine> = {
+export const gameEngines: Record<string, GameEngine> = {
   TIC_TAC_TOE: new TicTacToe(),
   CONNECT_FOUR: new ConnectFour(),
   ROCK_PAPER_SCISSORS: new RockPaperScissors(),

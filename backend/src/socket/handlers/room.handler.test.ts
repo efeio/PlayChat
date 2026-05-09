@@ -19,9 +19,12 @@ vi.mock('../../config/prisma.js', () => ({
   },
 }));
 
-/* Mock game handler activeGames */
+/* Mock game handler activeGames and gameEngines */
 vi.mock('./game.handler.js', () => ({
   activeGames: new Map(),
+  gameEngines: {
+    TIC_TAC_TOE: {},
+  },
 }));
 
 describe('room:get_state handler', () => {
@@ -44,7 +47,8 @@ describe('room:get_state handler', () => {
         if (event === 'room:get_state') {
           roomGetStateHandler = handler;
         }
-      }),
+        return mockSocket as Socket;
+      }) as any,
       emit: vi.fn(),
       to: vi.fn(() => mockSocket as any),
       join: vi.fn(),

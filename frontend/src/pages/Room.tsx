@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
@@ -78,8 +78,14 @@ export function Room() {
   const [activeGameType, setActiveGameType] = useState<GameType | null>(null);
   const [gameState, setGameState] = useState<Record<string, unknown> | null>(null);
   const [gamePlayers, setGamePlayers] = useState<GamePlayer[]>([]);
+  const gamePlayersRef = useRef<GamePlayer[]>([]);
   const [gameResult, setGameResult] = useState<GameEndEvent | null>(null);
   const [stateRecoveryError, setStateRecoveryError] = useState<string | null>(null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    gamePlayersRef.current = gamePlayers;
+  }, [gamePlayers]);
 
   /* Fetch room data */
   useEffect(() => {
@@ -204,6 +210,41 @@ export function Room() {
       setMyRole(data.role);
     };
 
+    const onUserJoined = (data: { userId: string; username: string; displayName?: string; role: string }) => {
+      setMembers((prev) => {
+        // If user already in list, just mark online
+        if (prev.some((m) => m.userId === data.userId)) {
+          return prev.map((m) =>
+            m.userId === data.userId ? { ...m, isOnline: true } : m
+          );
+        }
+        // Otherwise add new user
+        return [
+          ...prev,
+          {
+            id: `${data.userId}-${roomId}`,
+            userId: data.userId,
+            roomId: roomId as string,
+            role: data.role,
+            isOnline: true,
+            user: {
+              id: data.userId,
+              username: data.username,
+              displayName: data.displayName || data.username,
+            },
+          },
+        ];
+      });
+    };
+
+    const onUserLeft = (data: { userId: string; username: string }) => {
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.userId === data.userId ? { ...m, isOnline: false } : m
+        )
+      );
+    };
+
     const onRoomUpdated = (updatedRoom: RoomType) => {
       setRoom(updatedRoom);
       setMembers(updatedRoom.members);
@@ -234,12 +275,8 @@ export function Room() {
       if (data.result === 'draw') {
         addToast('success', 'Game ended in a draw!');
       } else if (data.winnerId) {
-        // Use gamePlayers state directly to avoid stale closure
-        setGamePlayers((currentPlayers) => {
-          const winner = currentPlayers.find((p) => p.userId === data.winnerId);
-          addToast('success', `${winner?.user.displayName || 'Player'} wins!`);
-          return currentPlayers;
-        });
+        const winner = gamePlayersRef.current.find((p) => p.userId === data.winnerId);
+        addToast('success', `${winner?.user.displayName || 'Player'} wins!`);
       }
       
       if (data.reason === 'disconnect_timeout') {
@@ -253,9 +290,13 @@ export function Room() {
     socket.on('game:started', onGameStarted);
     socket.on('game:state', onGameState);
     socket.on('game:end', onGameEnd);
+    socket.on('room:user_joined', onUserJoined);
+    socket.on('room:user_left', onUserLeft);
 
     return () => {
       socket.off('room:joined', onJoined);
+      socket.off('room:user_joined', onUserJoined);
+      socket.off('room:user_left', onUserLeft);
       socket.off('room:updated', onRoomUpdated);
       socket.off('message:received', onMessageReceived);
       socket.off('game:started', onGameStarted);

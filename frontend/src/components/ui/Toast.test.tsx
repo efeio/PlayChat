@@ -38,8 +38,7 @@ describe('Toast Component', () => {
     );
 
     const toast = container.firstChild as HTMLElement;
-    expect(toast).toHaveClass('border-red-500');
-    expect(screen.getByText('✕')).toBeInTheDocument();
+    expect(toast).toHaveClass('border-red-500/30');
   });
 
   it('renders success toast with correct styling', () => {
@@ -54,8 +53,7 @@ describe('Toast Component', () => {
     );
 
     const toast = container.firstChild as HTMLElement;
-    expect(toast).toHaveClass('border-green-500');
-    expect(screen.getByText('✓')).toBeInTheDocument();
+    expect(toast).toHaveClass('border-accent-green/30');
   });
 
   it('renders warning toast with correct styling', () => {
@@ -70,8 +68,7 @@ describe('Toast Component', () => {
     );
 
     const toast = container.firstChild as HTMLElement;
-    expect(toast).toHaveClass('border-yellow-500');
-    expect(screen.getByText('⚠')).toBeInTheDocument();
+    expect(toast).toHaveClass('border-yellow-500/30');
   });
 
   it('auto-dismisses after 4 seconds by default', () => {

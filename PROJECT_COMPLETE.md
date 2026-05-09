@@ -157,7 +157,6 @@ playchat/
 
 ```bash
 # Terminal 1: Auth Server
-cd auth
 npx prisma generate
 node server.js
 # Running on http://localhost:3000
@@ -421,7 +420,6 @@ The application is production-ready with:
 
 ```bash
 # Start all servers
-cd auth && node server.js &
 cd backend && npm run dev &
 cd frontend && npm run dev &
 

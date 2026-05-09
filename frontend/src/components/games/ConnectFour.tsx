@@ -105,7 +105,7 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
                   onClick={() => handleColumnClick(col)}
                   disabled={isFinished || !isMyTurn || board[0][col] !== 0}
                   style={{ borderWidth: '1px', borderColor: '#222222' }}
-                  className="w-11 h-11 sm:w-14 sm:h-14 bg-bg-elevated rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:cursor-default"
+                  className="w-11 h-11 sm:w-14 sm:h-14 bg-bg-elevated border border-border rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:cursor-default"
                 >
                   {cell !== 0 && (
                     <div

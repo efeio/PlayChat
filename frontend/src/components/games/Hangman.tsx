@@ -124,7 +124,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
       </div>
 
       {/* Hangman figure */}
-      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-bg-elevated rounded-xl flex items-center justify-center" style={{ borderWidth: '1px', borderColor: '#222222' }}>
+      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-bg-elevated border border-border rounded-xl flex items-center justify-center" style={{ borderWidth: '1px', borderColor: '#222222' }}>
         <pre className="text-text-primary text-center text-base sm:text-lg font-mono leading-tight select-none">
           {`  ┌───┐\n  │   ${wrongCount >= 1 ? 'O' : ' '}\n  │  ${wrongCount >= 3 ? '/' : ' '}${wrongCount >= 2 ? '|' : ' '}${wrongCount >= 4 ? '\\' : ' '}\n  │  ${wrongCount >= 5 ? '/' : ' '} ${wrongCount >= 6 ? '\\' : ' '}\n──┴──`}
         </pre>
@@ -162,7 +162,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
                       ? 'bg-accent-green/20 text-accent-green'
                       : isWrong
                       ? 'bg-bg-base text-text-muted/30'
-                      : 'bg-bg-elevated text-text-primary hover:bg-bg-surface'
+                      : 'bg-bg-elevated text-text-primary hover:bg-bg-surface border border-border'
                   }`}
                 >
                   {letter}

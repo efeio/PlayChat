@@ -157,7 +157,6 @@ Before running tests, ensure all servers are running:
 
 ```bash
 # Terminal 1: Auth Server
-cd auth && node server.js
 
 # Terminal 2: Backend Server
 cd backend && npm run dev
@@ -345,7 +344,6 @@ jobs:
       
       - name: Start servers
         run: |
-          cd auth && node server.js &
           cd backend && npm run dev &
           cd frontend && npm run dev &
           sleep 10

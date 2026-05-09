@@ -96,7 +96,6 @@ Ensure all servers are running:
 
 ```bash
 # Terminal 1: Auth Server (port 3000)
-cd auth && node server.js
 
 # Terminal 2: Backend Server (port 3001)
 cd backend && npm run dev
@@ -367,7 +366,6 @@ jobs:
       
       - name: Start servers
         run: |
-          cd auth && node server.js &
           cd backend && npm run dev &
           cd frontend && npm run dev &
           sleep 15

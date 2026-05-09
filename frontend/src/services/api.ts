@@ -24,6 +24,9 @@ async function request<T>(endpoint: string, options: FetchOptions = {}): Promise
   const data = await response.json();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('unauthorized'));
+    }
     throw new Error(data.error || `Request failed with status ${response.status}`);
   }
 
