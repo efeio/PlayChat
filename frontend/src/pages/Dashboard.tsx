@@ -80,9 +80,9 @@ export function Dashboard() {
         <div className="p-4 sm:p-8">
           {/* Create room modal */}
           {showCreate && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-              <div className="bg-bg-surface border border-border rounded-xl p-5 sm:p-6 w-full max-w-md space-y-4">
-                <h2 className="text-base sm:text-lg font-semibold text-text-primary">Create Room</h2>
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/40 p-4">
+              <div className="bg-bg-surface border border-white/10 rounded-3xl p-8 w-full max-w-md space-y-6">
+                <h2 className="text-xl font-semibold text-text-primary">Create Room</h2>
 
                 <Input
                   id="room-name"
@@ -93,7 +93,7 @@ export function Dashboard() {
                   autoFocus
                 />
 
-                <div className="flex justify-end gap-3">
+                <div className="flex items-center justify-end gap-3 pt-2">
                   <Button variant="outlined" onClick={() => setShowCreate(false)}>
                     Cancel
                   </Button>
@@ -133,14 +133,14 @@ export function Dashboard() {
               {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="bg-bg-surface border border-border rounded-xl p-5 flex flex-col gap-4 hover:border-text-muted/30 transition-colors"
+                  className="bg-[#111] border border-white/5 rounded-xl p-5 flex flex-col gap-4 hover:bg-zinc-800 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="text-text-primary font-semibold text-sm">
                         {room.name}
                       </h3>
-                      <p className="text-text-muted text-xs mt-0.5">
+                      <p className="text-zinc-500 text-xs mt-0.5">
                         {room.members.length}/{room.maxMembers} members
                       </p>
                     </div>
