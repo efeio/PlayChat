@@ -351,13 +351,13 @@ export function Room() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-black">
       <Sidebar />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-black">
         {/* Room header */}
-        <div className="h-14 flex items-center justify-between px-6 border-b border-border shrink-0">
+        <div className="h-14 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
@@ -406,17 +406,17 @@ export function Room() {
                 </div>
 
                 {isOwner && (
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-sm w-full px-4">
+                  <div className="flex flex-wrap justify-center gap-4 max-w-2xl mx-auto">
                     {GAME_TYPES.map((game) => (
                       <button
                         key={game.value}
                         onClick={() => handleStartGame(game.value)}
-                        className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 text-center hover:bg-white/10 transition-colors cursor-pointer group"
+                        className="flex flex-col items-center justify-center bg-[#161618] border border-white/10 rounded-3xl w-40 h-32 hover:bg-white/5 hover:border-white/20 transition-all duration-300 cursor-pointer group"
                       >
-                        <p className="text-text-primary text-xs sm:text-sm font-semibold group-hover:text-white">
+                        <p className="text-white font-medium group-hover:-translate-y-1 transition-transform">
                           {game.label}
                         </p>
-                        <p className="text-text-muted text-[10px] sm:text-xs mt-0.5">Start game</p>
+                        <p className="text-zinc-500 text-xs mt-2">Start game</p>
                       </button>
                     ))}
                   </div>
@@ -468,7 +468,7 @@ export function Room() {
           </div>
 
           {/* Chat panel */}
-          <div className="w-80 shrink-0 bg-[#1c1c1e] border-l border-white/5 p-6 flex flex-col">
+          <div className="w-80 shrink-0 bg-[#0a0a0a] border-l border-white/5 p-6 flex flex-col">
             <ChatPanel roomId={roomId!} messages={messages} />
           </div>
         </div>

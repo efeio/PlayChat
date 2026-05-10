@@ -11,9 +11,9 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-16 sm:w-64 h-screen bg-bg-surface border-r border-border flex flex-col shrink-0">
+    <aside className="w-16 sm:w-64 h-screen bg-[#111111] border-r border-white/5 flex flex-col shrink-0">
       {/* Logo */}
-      <div className="h-14 sm:h-16 flex items-center justify-center sm:justify-start gap-2.5 px-3 sm:px-5 border-b border-border">
+      <div className="h-14 sm:h-16 flex items-center justify-center sm:justify-start gap-2.5 px-3 sm:px-5 border-b border-white/5">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="22"
@@ -57,7 +57,7 @@ export function Sidebar() {
       </nav>
 
       {/* User footer */}
-      <div className="p-2 sm:p-3 border-t border-border">
+      <div className="p-2 sm:p-3 border-t border-white/5">
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2">
           <div className="w-8 h-8 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-text-primary text-xs font-semibold">
             {user?.displayName?.charAt(0).toUpperCase() || '?'}

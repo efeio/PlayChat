@@ -60,28 +60,31 @@ export function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-black">
       <Sidebar />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-black">
         {/* Header */}
-        <div className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-8 border-b border-border shrink-0">
-          <h1 className="text-lg sm:text-xl font-semibold text-text-primary">Rooms</h1>
-          <Button onClick={() => setShowCreate(true)}>
+        <div className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-8 border-b border-white/5 shrink-0">
+          <h1 className="text-lg sm:text-xl font-semibold text-white">Rooms</h1>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="bg-white text-black font-semibold rounded-full px-6 py-3 hover:scale-[1.02] hover:bg-gray-100 transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center gap-2"
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             <span className="hidden sm:inline">Create Room</span>
             <span className="sm:hidden">Create</span>
-          </Button>
+          </button>
         </div>
 
         <div className="p-4 sm:p-8">
           {/* Create room modal */}
           {showCreate && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-              <div className="w-full max-w-md bg-[#1c1c1e] border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col gap-6">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+              <div className="w-full max-w-md bg-[#161618]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl flex flex-col gap-6">
                 <h2 className="text-xl font-semibold text-white">Create Room</h2>
 
                 <input
@@ -91,20 +94,20 @@ export function Dashboard() {
                   onChange={(e) => setNewRoomName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
                   autoFocus
-                  className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-200"
                 />
 
-                <div className="flex justify-end gap-3 w-full mt-2">
+                <div className="flex justify-end gap-2 w-full mt-2">
                   <button
                     onClick={() => setShowCreate(false)}
-                    className="px-6 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+                    className="bg-transparent text-zinc-400 font-medium rounded-full px-6 py-3 hover:text-white hover:bg-white/5 transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateRoom}
                     disabled={!newRoomName.trim()}
-                    className="px-6 py-2 rounded-xl bg-white text-black font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-white text-black font-semibold rounded-full px-6 py-3 hover:scale-[1.02] hover:bg-gray-100 transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Create
                   </button>
@@ -141,7 +144,7 @@ export function Dashboard() {
               {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="flex flex-col justify-between bg-[#1c1c1e] border border-white/5 rounded-2xl p-6 transition-all duration-200 hover:bg-[#252527] hover:border-white/15"
+                  className="flex flex-col justify-between bg-[#111111] border border-white/5 rounded-2xl p-6 transition-all duration-200 hover:bg-[#161618] hover:border-white/10"
                 >
                   <div>
                     <div className="flex items-start justify-between mb-4">
@@ -165,14 +168,14 @@ export function Dashboard() {
                       {room.members.slice(0, 5).map((m) => (
                         <div
                           key={m.id}
-                          className="w-7 h-7 rounded-full bg-bg-elevated border-2 border-bg-surface flex items-center justify-center text-[10px] text-text-secondary font-medium"
+                          className="w-7 h-7 rounded-full bg-white/5 border-2 border-[#111111] flex items-center justify-center text-[10px] text-zinc-400 font-medium"
                           title={m.user.displayName}
                         >
                           {m.user.displayName.charAt(0).toUpperCase()}
                         </div>
                       ))}
                       {room.members.length > 5 && (
-                        <div className="w-7 h-7 rounded-full bg-bg-elevated border-2 border-bg-surface flex items-center justify-center text-[10px] text-text-muted">
+                        <div className="w-7 h-7 rounded-full bg-white/5 border-2 border-[#111111] flex items-center justify-center text-[10px] text-zinc-500">
                           +{room.members.length - 5}
                         </div>
                       )}
@@ -181,7 +184,7 @@ export function Dashboard() {
 
                   <button
                     onClick={() => navigate(`/room/${room.id}`)}
-                    className="w-full mt-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white hover:text-black text-center transition-colors"
+                    className="w-full mt-6 py-3 rounded-full bg-white text-black font-semibold hover:scale-[1.02] hover:bg-gray-100 text-center transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                   >
                     Join Room
                   </button>

@@ -26,9 +26,9 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-black">
       {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-center items-center p-12 bg-bg-surface border-r border-border relative">
+      <div className="hidden lg:flex w-1/2 flex-col justify-center items-center p-12 bg-[#111111] border-r border-white/5 relative">
         <div className="absolute top-8 left-8 flex items-center gap-2.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-primary">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -52,8 +52,8 @@ export function Login() {
       </div>
 
       {/* Right panel (form) */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-12 relative">
-        <div className="w-full max-w-sm bg-[#1c1c1e] p-8 rounded-3xl border border-white/5 shadow-2xl">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-12 bg-black relative">
+        <div className="w-full max-w-sm bg-[#161618]/80 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/10 shadow-2xl">
           <h1 className="text-3xl lg:text-4xl font-semibold text-text-primary mb-2 tracking-tight">
             Welcome back.
           </h1>
