@@ -48,6 +48,26 @@ export async function listRooms() {
   return rooms;
 }
 
+const membershipLocks = new Map<string, Promise<void>>();
+
+async function acquireLock(key: string): Promise<() => void> {
+  let release!: () => void;
+  const newLock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  while (membershipLocks.has(key)) {
+    await membershipLocks.get(key);
+  }
+
+  membershipLocks.set(key, newLock);
+
+  return () => {
+    membershipLocks.delete(key);
+    release();
+  };
+}
+
 export async function getRoomById(roomId: string) {
   const room = await prisma.room.findUnique({
     where: { id: roomId },
@@ -75,11 +95,18 @@ export async function addMemberToRoom(
   userId: string,
   role: string = 'MEMBER'
 ) {
-  return prisma.roomMember.upsert({
-    where: { userId_roomId: { userId, roomId } },
-    update: { role },
-    create: { userId, roomId, role },
-  });
+  const lockKey = `${roomId}:${userId}`;
+  const release = await acquireLock(lockKey);
+
+  try {
+    return await prisma.roomMember.upsert({
+      where: { userId_roomId: { userId, roomId } },
+      update: { role },
+      create: { userId, roomId, role },
+    });
+  } finally {
+    release();
+  }
 }
 
 export async function removeMemberFromRoom(roomId: string, userId: string) {
