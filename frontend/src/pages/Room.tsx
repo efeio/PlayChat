@@ -54,11 +54,11 @@ interface RoomStateResponse {
   userRole: 'OWNER' | 'MEMBER' | 'SPECTATOR';
 }
 
-const GAME_TYPES: { value: GameType; label: string }[] = [
-  { value: 'TIC_TAC_TOE', label: 'Tic-Tac-Toe' },
-  { value: 'CONNECT_FOUR', label: 'Connect Four' },
-  { value: 'ROCK_PAPER_SCISSORS', label: 'Rock Paper Scissors' },
-  { value: 'HANGMAN', label: 'Hangman' },
+const GAME_TYPES: { value: GameType; label: string; icon: string }[] = [
+  { value: 'TIC_TAC_TOE', label: 'Tic-Tac-Toe', icon: '⊞' },
+  { value: 'CONNECT_FOUR', label: 'Connect Four', icon: '◉' },
+  { value: 'ROCK_PAPER_SCISSORS', label: 'Rock Paper Scissors', icon: '✊' },
+  { value: 'HANGMAN', label: 'Hangman', icon: '✎' },
 ];
 
 export function Room() {
@@ -331,12 +331,12 @@ export function Room() {
 
   if (!room || isLoadingState || stateRecoveryError) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-bg-base">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           {stateRecoveryError ? (
-            <div className="text-center">
-              <p className="text-text-primary text-sm mb-4">Failed to load room state</p>
+            <div className="text-center animate-fade-in">
+              <p className="text-white text-sm mb-4">Failed to load room state</p>
               <p className="text-text-muted text-xs mb-6">{stateRecoveryError}</p>
               <Button variant="outlined" onClick={recoverState}>
                 Retry
@@ -351,24 +351,24 @@ export function Room() {
   }
 
   return (
-    <div className="flex h-screen bg-black">
+    <div className="flex h-screen bg-bg-base">
       <Sidebar />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 bg-black">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Room header */}
-        <div className="h-14 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
+        <div className="h-14 flex items-center justify-between px-6 border-b border-border-subtle shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              className="text-text-muted hover:text-white transition-colors duration-200 cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
             <div>
-              <h2 className="text-text-primary font-semibold text-sm">{room.name}</h2>
+              <h2 className="text-white font-semibold text-sm">{room.name}</h2>
               <p className="text-text-muted text-xs">{members.length} members</p>
             </div>
           </div>
@@ -379,7 +379,7 @@ export function Room() {
               {members.slice(0, 4).map((m) => (
                 <div
                   key={m.id}
-                  className="w-6 h-6 rounded-full bg-bg-elevated border border-bg-surface flex items-center justify-center text-[9px] text-text-secondary font-medium"
+                  className="w-6 h-6 rounded-full bg-bg-card border border-bg-base flex items-center justify-center text-[9px] text-text-secondary font-medium"
                   title={m.user.displayName}
                 >
                   {m.user.displayName.charAt(0).toUpperCase()}
@@ -392,31 +392,36 @@ export function Room() {
         {/* Game + Chat split */}
         <div className="flex-1 flex flex-col md:flex-row min-h-0">
           {/* Game area */}
-          <div className="flex-1 flex flex-col bg-black p-8 items-center justify-center min-w-0">
+          <div className="flex-1 flex flex-col p-8 items-center justify-center min-w-0">
             {!activeGameId && !gameResult && (
-              /* No game started */
-              <div className="flex-1 flex flex-col items-center justify-center gap-6 p-4 sm:p-6">
-                <div className="text-center">
-                  <p className="text-text-secondary text-sm mb-1">No game in progress</p>
+              /* No game started — Premium game selection */
+              <div className="flex-1 flex flex-col items-center justify-center gap-8 p-4 sm:p-6 animate-fade-in">
+                <div className="flex flex-col items-center justify-center gap-3 min-h-[100px]">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-faint">
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="10 8 16 12 10 16 10 8" />
+                  </svg>
+                  <p className="text-text-secondary text-lg font-medium tracking-wide">No game in progress</p>
                   {isOwner ? (
-                    <p className="text-text-muted text-xs">Choose a game to start</p>
+                    <p className="text-text-muted text-sm">Choose a game to start</p>
                   ) : (
-                    <p className="text-text-muted text-xs">Waiting for the room owner to start a game</p>
+                    <p className="text-text-muted text-sm">Waiting for the room owner to start a game</p>
                   )}
                 </div>
 
                 {isOwner && (
-                  <div className="flex flex-wrap justify-center gap-5 max-w-3xl mx-auto">
+                  <div className="flex flex-wrap items-center justify-center gap-6 max-w-3xl mx-auto">
                     {GAME_TYPES.map((game) => (
                       <button
                         key={game.value}
                         onClick={() => handleStartGame(game.value)}
-                        className="flex flex-col items-center justify-center bg-[#1a1a1a] border border-white/20 rounded-3xl w-48 h-40 hover:bg-[#222] hover:border-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all duration-300 cursor-pointer group"
+                        className="flex flex-col items-center justify-center w-40 h-40 bg-bg-elevated border border-border-subtle rounded-[2rem] hover:bg-bg-card hover:border-border-default hover:-translate-y-1 transition-all duration-300 cursor-pointer group shadow-lg"
                       >
-                        <p className="text-white text-lg font-bold group-hover:-translate-y-1 transition-transform">
+                        <span className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">{game.icon}</span>
+                        <p className="text-white font-medium text-base group-hover:-translate-y-0.5 transition-transform duration-300">
                           {game.label}
                         </p>
-                        <p className="text-zinc-500 text-sm mt-3">Start game</p>
+                        <p className="text-sm text-text-muted mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Start game</p>
                       </button>
                     ))}
                   </div>
@@ -432,12 +437,12 @@ export function Room() {
 
             {(activeGameId || gameResult) && (
               /* Active game or finished game */
-              <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+              <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in">
                 {renderGame()}
 
                 {gameResult && (
                   <div className="mt-6 text-center">
-                    <p className="text-text-primary font-semibold text-sm sm:text-base">
+                    <p className="text-white font-semibold text-sm sm:text-base">
                       {gameResult.result === 'draw'
                         ? 'Game ended in a draw!'
                         : `Winner: ${playerDisplayList.find((p) => p.userId === gameResult.winnerId)?.displayName || 'Unknown'}`}
@@ -468,7 +473,7 @@ export function Room() {
           </div>
 
           {/* Chat panel */}
-          <div className="w-80 shrink-0 bg-[#0a0a0a] border-l border-white/5 p-6 flex flex-col">
+          <div className="w-80 shrink-0 bg-bg-surface border-l border-border-subtle flex flex-col">
             <ChatPanel roomId={roomId!} messages={messages} />
           </div>
         </div>

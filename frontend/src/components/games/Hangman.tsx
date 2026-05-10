@@ -39,16 +39,6 @@ interface HangmanProps {
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-const HANGMAN_PARTS = [
-  /* 0 wrong */ '',
-  /* 1 wrong */ 'O',        /* head */
-  /* 2 wrong */ '|',        /* body */
-  /* 3 wrong */ '/|',       /* left arm + body */
-  /* 4 wrong */ '/|\\',     /* both arms + body */
-  /* 5 wrong */ '/',        /* left leg */
-  /* 6 wrong */ '/ \\',     /* both legs */
-];
-
 export function Hangman({ gameState, onMove, currentUserId, players }: HangmanProps) {
   const [wordGuess, setWordGuess] = useState('');
   const { guessedLetters, wrongCount, winner, setter, guesser, roles } = gameState;
@@ -102,7 +92,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-text-primary font-semibold text-lg">
+          <p className="text-white font-semibold text-lg">
             {winner === guesser
               ? `${getPlayerName(guesser)} guessed the word!`
               : `${getPlayerName(guesser)} couldn't guess — ${getPlayerName(setter)} wins!`}
@@ -110,7 +100,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
         ) : (
           <p className="text-text-secondary text-sm">
             {isGuesser ? (
-              <span className="text-text-primary font-medium">Guess the word!</span>
+              <span className="text-white font-medium">Guess the word!</span>
             ) : (
               `Waiting for ${getPlayerName(guesser)} to guess...`
             )}
@@ -120,21 +110,21 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
 
       {/* Roles */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs w-full max-w-md">
-        <div className={`px-3 py-1.5 rounded-lg border ${currentUserRole === 'SETTER' ? 'bg-bg-elevated text-text-primary' : 'bg-bg-surface text-text-secondary'}`} style={{ borderColor: currentUserRole === 'SETTER' ? 'rgba(255, 255, 255, 0.2)' : '#222222' }}>
+        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 ${currentUserRole === 'SETTER' ? 'bg-bg-card text-white border-border-default' : 'bg-bg-elevated text-text-secondary border-border-subtle'}`}>
           <span className="opacity-60">Word Setter:</span>{' '}
           <span className="font-medium">{getPlayerName(setter)}</span>
-          {currentUserRole === 'SETTER' && <span className="ml-1.5 text-accent-green">(You)</span>}
+          {currentUserRole === 'SETTER' && <span className="ml-1.5 text-emerald-400">(You)</span>}
         </div>
-        <div className={`px-3 py-1.5 rounded-lg border ${currentUserRole === 'GUESSER' ? 'bg-bg-elevated text-text-primary' : 'bg-bg-surface text-text-secondary'}`} style={{ borderColor: currentUserRole === 'GUESSER' ? 'rgba(255, 255, 255, 0.2)' : '#222222' }}>
+        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 ${currentUserRole === 'GUESSER' ? 'bg-bg-card text-white border-border-default' : 'bg-bg-elevated text-text-secondary border-border-subtle'}`}>
           <span className="opacity-60">Word Guesser:</span>{' '}
           <span className="font-medium">{getPlayerName(guesser)}</span>
-          {currentUserRole === 'GUESSER' && <span className="ml-1.5 text-accent-green">(You)</span>}
+          {currentUserRole === 'GUESSER' && <span className="ml-1.5 text-emerald-400">(You)</span>}
         </div>
       </div>
 
       {/* Hangman figure */}
-      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-bg-elevated rounded-xl flex items-center justify-center border border-border">
-        <pre className="text-text-primary text-center text-base sm:text-lg font-mono leading-tight select-none">
+      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-bg-elevated rounded-2xl flex items-center justify-center border border-border-subtle">
+        <pre className="text-white text-center text-base sm:text-lg font-mono leading-tight select-none">
           {`  ┌───┐\n  │   ${wrongCount >= 1 ? 'O' : ' '}\n  │  ${wrongCount >= 3 ? '/' : ' '}${wrongCount >= 2 ? '|' : ' '}${wrongCount >= 4 ? '\\' : ' '}\n  │  ${wrongCount >= 5 ? '/' : ' '} ${wrongCount >= 6 ? '\\' : ' '}\n──┴──`}
         </pre>
       </div>
@@ -145,7 +135,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
       </p>
 
       {/* Word display */}
-      <div className="text-xl sm:text-2xl font-mono text-text-primary tracking-[0.2em] sm:tracking-[0.3em] select-none">
+      <div className="text-xl sm:text-2xl font-mono text-white tracking-[0.2em] sm:tracking-[0.3em] select-none">
         {maskedWord}
       </div>
 
@@ -162,16 +152,12 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
                   key={letter}
                   onClick={() => handleLetterGuess(letter)}
                   disabled={used}
-                  style={{
-                    borderWidth: '1px',
-                    borderColor: isCorrect ? 'rgba(74, 124, 89, 0.3)' : isWrong ? 'rgba(34, 34, 34, 0.5)' : '#222222'
-                  }}
-                  className={`w-11 h-11 sm:w-12 sm:h-12 rounded-lg text-sm sm:text-base font-medium transition-colors cursor-pointer disabled:cursor-default ${
+                  className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 cursor-pointer disabled:cursor-default border ${
                     isCorrect
-                      ? 'bg-accent-green/20 text-accent-green'
+                      ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
                       : isWrong
-                      ? 'bg-bg-base text-text-muted/30'
-                      : 'bg-bg-elevated text-text-primary hover:bg-bg-surface border border-border'
+                      ? 'bg-bg-base text-text-faint border-border-subtle'
+                      : 'bg-bg-elevated text-white border-border-subtle hover:bg-bg-card hover:border-border-default'
                   }`}
                 >
                   {letter}
@@ -181,18 +167,20 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
           </div>
 
           {/* Word guess input */}
-          <div className="flex gap-2 w-full max-w-xs px-4">
+          <div className="flex gap-2 w-full max-w-xs" style={{ paddingLeft: '16px', paddingRight: '16px' }}>
             <input
               value={wordGuess}
               onChange={(e) => setWordGuess(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleWordGuess()}
               placeholder="Guess the word..."
-              className="flex-1 h-11 px-3 rounded-lg border border-border bg-bg-elevated text-text-primary placeholder:text-text-muted text-sm focus:border-text-primary focus:outline-none"
+              style={{ height: '44px', paddingLeft: '16px', paddingRight: '16px' }}
+              className="flex-1 rounded-full bg-input-bg border border-input-border text-white placeholder-text-muted text-sm focus:border-input-focus focus:ring-1 focus:ring-input-focus focus:outline-none transition-all duration-200"
             />
             <button
               onClick={handleWordGuess}
               disabled={!wordGuess.trim()}
-              className="h-11 px-4 rounded-lg bg-text-primary text-bg-base text-sm font-semibold hover:opacity-90 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+              style={{ height: '44px', paddingLeft: '20px', paddingRight: '20px' }}
+              className="rounded-full bg-white text-black text-sm font-semibold hover:bg-neutral-200 active:scale-[0.98] disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all duration-200"
             >
               Guess
             </button>

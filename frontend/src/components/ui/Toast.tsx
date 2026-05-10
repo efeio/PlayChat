@@ -21,13 +21,13 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
   const getTypeStyles = () => {
     switch (type) {
       case 'error':
-        return 'border-red-500/30 bg-red-500/10 text-red-400';
+        return 'border-red-500/30 bg-red-950 text-red-400';
       case 'success':
-        return 'border-accent-green/30 bg-accent-green/10 text-accent-green';
+        return 'border-emerald-500/30 bg-emerald-950 text-emerald-400';
       case 'warning':
-        return 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400';
+        return 'border-amber-500/30 bg-amber-950 text-amber-400';
       default:
-        return 'border-border bg-bg-surface text-text-primary';
+        return 'border-border-default bg-bg-elevated text-white';
     }
   };
 
@@ -64,7 +64,8 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
       onClick={() => onDismiss(id)}
       role="alert"
       aria-live="polite"
-      className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[320px] max-w-md`}
+      className={`flex items-start gap-3 rounded-2xl border backdrop-blur-xl ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[320px] max-w-md shadow-2xl`}
+      style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '14px', paddingBottom: '14px' }}
     >
       <div className="shrink-0 mt-0.5">{getIcon()}</div>
       <p className="text-sm flex-1 leading-snug">{message}</p>
@@ -73,7 +74,7 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
           e.stopPropagation();
           onDismiss(id);
         }}
-        className="shrink-0 text-current opacity-50 hover:opacity-100 transition-opacity"
+        className="shrink-0 text-current opacity-40 hover:opacity-100 transition-opacity"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />

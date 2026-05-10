@@ -26,7 +26,7 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-text-primary font-semibold text-lg">
+          <p className="text-white font-semibold text-lg">
             {winner
               ? `${getPlayerName(winner)} wins!`
               : 'Draw!'}
@@ -34,7 +34,7 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
         ) : (
           <p className="text-text-secondary text-sm">
             {isMyTurn ? (
-              <span className="text-text-primary font-medium">Your turn</span>
+              <span className="text-white font-medium">Your turn</span>
             ) : (
               `Waiting for ${getPlayerName(currentTurnPlayer)}...`
             )}
@@ -47,12 +47,11 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
         {gameState.players.map((pid, i) => (
           <div
             key={pid}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all duration-200 ${
               currentPlayerIndex === i && !isFinished
-                ? 'bg-bg-elevated text-text-primary'
+                ? 'bg-bg-card text-white border border-border-subtle'
                 : 'text-text-secondary'
             }`}
-            style={currentPlayerIndex === i && !isFinished ? { borderWidth: '1px', borderColor: '#222222' } : undefined}
           >
             <span className="font-semibold text-base">
               {i === 0 ? 'X' : 'O'}
@@ -63,19 +62,18 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
       </div>
 
       {/* Board */}
-      <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
         {board.map((cell, idx) => (
           <button
             key={idx}
             onClick={() => onMove({ position: idx })}
             disabled={isFinished || !isMyTurn || !!cell}
-            className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-elevated rounded-lg flex items-center justify-center text-2xl sm:text-3xl font-bold transition-colors hover:bg-bg-surface disabled:cursor-default cursor-pointer"
-            style={{ borderWidth: '1px', borderColor: '#222222' }}
+            className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-elevated border border-border-subtle rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all duration-200 hover:bg-bg-card hover:border-border-default disabled:cursor-default cursor-pointer"
           >
             <span
               className={
                 cell === 'X'
-                  ? 'text-text-primary'
+                  ? 'text-white'
                   : cell === 'O'
                   ? 'text-text-secondary'
                   : ''

@@ -53,7 +53,7 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-text-primary font-semibold text-lg">
+          <p className="text-white font-semibold text-lg">
             {winner ? `${getPlayerName(winner)} wins the match!` : 'Match ends in a draw!'}
           </p>
         ) : (
@@ -72,7 +72,7 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
       <div className="flex gap-8">
         {gameState.players.map((pid) => (
           <div key={pid} className="text-center">
-            <p className="text-text-primary font-semibold text-2xl">{scores[pid] || 0}</p>
+            <p className="text-white font-semibold text-2xl">{scores[pid] || 0}</p>
             <p className="text-text-secondary text-xs mt-1">{getPlayerName(pid)}</p>
           </div>
         ))}
@@ -86,14 +86,10 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
               key={choice}
               onClick={() => handleChoice(choice)}
               disabled={hasChosen}
-              style={{
-                borderWidth: '1px',
-                borderColor: selected === choice ? '#ffffff' : '#222222'
-              }}
-              className={`w-20 h-20 sm:w-24 sm:h-24 rounded-xl transition-all flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-default ${
+              className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl transition-all duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-default border ${
                 selected === choice
-                  ? 'bg-bg-elevated'
-                  : 'bg-bg-elevated hover:border-text-secondary'
+                  ? 'bg-bg-card border-border-strong'
+                  : 'bg-bg-elevated border-border-subtle hover:border-border-default hover:bg-bg-card'
               } ${hasChosen && selected !== choice ? 'opacity-30' : ''}`}
             >
               <span className="text-2xl sm:text-3xl">{ICONS[choice]}</span>

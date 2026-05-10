@@ -26,15 +26,15 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           </p>
         )}
         <div
-          className={`px-3.5 py-2 rounded-xl text-sm ${
+          className={`px-3.5 py-2 rounded-2xl text-sm ${
             isOwn
-              ? 'bg-text-primary text-bg-base rounded-br-sm'
-              : 'bg-bg-elevated text-text-primary border border-border rounded-bl-sm'
+              ? 'bg-white text-black rounded-br-sm'
+              : 'bg-bg-card text-white border border-border-subtle rounded-bl-sm'
           }`}
         >
           {message.content}
         </div>
-        <p className={`text-[10px] text-text-muted mt-0.5 px-1 ${isOwn ? 'text-right' : ''}`}>
+        <p className={`text-[10px] text-text-faint mt-0.5 px-1 ${isOwn ? 'text-right' : ''}`}>
           {new Date(message.createdAt).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
