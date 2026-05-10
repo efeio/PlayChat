@@ -65,7 +65,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      const playerIds = members.map((m) => m.userId);
+      const playerIds = members.map((m: any) => m.userId);
       const gameState = engine.initialize(playerIds);
 
       const game = await prisma.game.create({
@@ -75,7 +75,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
           status: 'IN_PROGRESS',
           state: JSON.stringify(gameState),
           players: {
-            create: members.map((m, i) => ({
+            create: members.map((m: any, i: number) => ({
               userId: m.userId,
               role: 'PLAYER',
               playerIndex: i,
@@ -92,7 +92,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
       activeGames.set(game.id, { engine, state: gameState, gameId: game.id });
 
       /* Enhance players with gameRole for Hangman */
-      const playersWithRoles = game.players.map((p) => {
+      const playersWithRoles = game.players.map((p: any) => {
         const player = {
           ...p,
           user: p.user,
@@ -185,15 +185,16 @@ export function registerGameHandlers(io: Server, socket: Socket) {
       const newState = engine.applyMove(state, move, userId);
       activeGame.state = newState;
 
+      /* Broadcast state immediately for fast UI sync */
+      io.to(roomId).emit('game:state', {
+        gameId,
+        state: newState,
+      });
+
       /* Persist state to DB */
       await prisma.game.update({
         where: { id: gameId },
         data: { state: JSON.stringify(newState) },
-      });
-
-      io.to(roomId).emit('game:state', {
-        gameId,
-        state: newState,
       });
 
       /* Create game log */
@@ -336,6 +337,39 @@ export function cancelDisconnectTimer(userId: string) {
   if (timer) {
     clearTimeout(timer);
     disconnectTimers.delete(userId);
+  }
+}
+
+/* Immediately end active games for a player leaving a room */
+export async function handlePlayerLeftRoom(io: Server, userId: string, roomId: string) {
+  for (const [gameId, game] of activeGames.entries()) {
+    const state = game.state as { players?: string[] };
+    if (state.players && state.players.includes(userId)) {
+      /* Only affect games in the specific room */
+      const dbGame = await prisma.game.findUnique({ where: { id: gameId } });
+      if (dbGame && dbGame.roomId === roomId) {
+        const otherPlayer = state.players.find((p) => p !== userId);
+
+        await prisma.game.update({
+          where: { id: gameId },
+          data: {
+            status: 'FINISHED',
+            winnerId: otherPlayer || null,
+          },
+        });
+
+        activeGames.delete(gameId);
+
+        io.to(roomId).emit('game:end', {
+          gameId,
+          result: 'win',
+          winnerId: otherPlayer,
+          reason: 'player_left',
+        });
+
+        cancelDisconnectTimer(userId);
+      }
+    }
   }
 }
 

@@ -92,6 +92,9 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
     if (isFinished) {
       setWordGuess('');
     }
+    return () => {
+      setWordGuess('');
+    }
   }, [isFinished]);
 
   return (

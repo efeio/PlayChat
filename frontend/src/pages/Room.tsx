@@ -186,6 +186,12 @@ export function Room() {
         }));
         setGamePlayers(transformedPlayers);
         setGameResult(null);
+      } else {
+        setActiveGameId(null);
+        setActiveGameType(null);
+        setGameState(null);
+        setGamePlayers([]);
+        setGameResult(null);
       }
     });
   }, [socket, isAuthenticated, roomId, navigate, addToast]);
@@ -244,11 +250,23 @@ export function Room() {
       
       if (data.reason === 'disconnect_timeout') {
         addToast('warning', 'Opponent disconnected - game ended');
+      } else if (data.reason === 'player_left') {
+        addToast('warning', 'An opponent left the room - game ended');
+        setActiveGameId(null);
+        setActiveGameType(null);
+        setGameState(null);
+        setGamePlayers([]);
+        setGameResult(null);
       }
+    };
+
+    const onUserLeft = (data: { userId: string; username: string }) => {
+      setMembers((prev) => prev.map((m) => m.userId === data.userId ? { ...m, isOnline: false } : m));
     };
 
     socket.on('room:joined', onJoined);
     socket.on('room:updated', onRoomUpdated);
+    socket.on('room:user_left', onUserLeft);
     socket.on('message:received', onMessageReceived);
     socket.on('game:started', onGameStarted);
     socket.on('game:state', onGameState);
@@ -257,6 +275,7 @@ export function Room() {
     return () => {
       socket.off('room:joined', onJoined);
       socket.off('room:updated', onRoomUpdated);
+      socket.off('room:user_left', onUserLeft);
       socket.off('message:received', onMessageReceived);
       socket.off('game:started', onGameStarted);
       socket.off('game:state', onGameState);
