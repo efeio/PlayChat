@@ -411,9 +411,9 @@ export function Room() {
                       <button
                         key={game.value}
                         onClick={() => handleStartGame(game.value)}
-                        className="bg-bg-surface border border-border rounded-xl p-3 sm:p-4 text-center hover:border-text-muted/30 transition-colors cursor-pointer group"
+                        className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 text-center hover:bg-white/10 transition-colors cursor-pointer group"
                       >
-                        <p className="text-text-primary text-xs sm:text-sm font-medium group-hover:text-text-primary">
+                        <p className="text-text-primary text-xs sm:text-sm font-semibold group-hover:text-white">
                           {game.label}
                         </p>
                         <p className="text-text-muted text-[10px] sm:text-xs mt-0.5">Start game</p>

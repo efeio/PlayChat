@@ -36,7 +36,7 @@ export function Login() {
           <span className="text-text-primary font-semibold text-xl tracking-tight">PlayChat</span>
         </div>
 
-        <div className="max-w-md mx-auto w-full px-8">
+        <div className="w-full max-w-md mx-auto">
           <div className="w-12 h-0.5 bg-text-primary mb-10" />
 
           <h2 className="text-5xl xl:text-6xl font-semibold text-text-primary leading-tight tracking-tight mb-4">
