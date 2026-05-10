@@ -91,7 +91,7 @@ test.describe('Smoke Tests', () => {
     await page1.waitForTimeout(5000);
 
     // Game should still be active (timeout not reached yet)
-    await expect(page1.locator('text=/wins/')).not.toBeVisible({ timeout: 2000 });
+    await expect(page1.locator('text=/wins/').first()).not.toBeVisible({ timeout: 2000 });
 
     await context1.close();
   });

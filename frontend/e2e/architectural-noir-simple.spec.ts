@@ -49,11 +49,11 @@ test.describe('Architectural Noir Design System - Simplified', () => {
       await page.click('button:has-text("Tic-Tac-Toe")');
       
       // Wait for game board to appear
-      await page.waitForSelector('.grid-cols-3', { timeout: 5000 });
+      await page.waitForSelector('.grid\.grid-cols-3', { timeout: 5000 });
       await page.waitForTimeout(500);
 
       // Verify game board is visible - target the grid container specifically
-      const gameBoard = page.locator('.grid-cols-3').first();
+      const gameBoard = page.locator('.grid\.grid-cols-3').first();
       await expect(gameBoard).toBeVisible();
       
       const cells = gameBoard.locator('button');

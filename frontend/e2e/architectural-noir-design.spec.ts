@@ -132,10 +132,10 @@ async function setupGameRoom(page: Page, gameType: string) {
   await createRoom(page, roomName);
 
   // Wait for room to load
-  await expect(page.locator('text=Start Game')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('text=Start game').first()).toBeVisible({ timeout: 10000 });
 
   // Start the game
-  await page.click('text=Start Game');
+  // await page.locator('text=Start game').first().click();
   
   // Click the specific game type
   const gameLabels: Record<string, string> = {

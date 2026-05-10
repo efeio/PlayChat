@@ -53,12 +53,12 @@ export async function waitForGameEnd(page: Page, timeout: number = 35000): Promi
 
 export async function makeMove(page: Page, gameType: 'TIC_TAC_TOE' | 'CONNECT_FOUR'): Promise<void> {
   if (gameType === 'TIC_TAC_TOE') {
-    // Click first empty cell
-    const cells = page.locator('button').filter({ hasNotText: /X|O/ });
+    // Click first empty cell on the board
+    const cells = page.locator('.grid.grid-cols-3 button').filter({ hasNotText: /X|O/ });
     await cells.first().click();
   } else if (gameType === 'CONNECT_FOUR') {
     // Click first column
-    const columns = page.locator('button').filter({ has: page.locator('svg') });
+    const columns = page.locator('.grid button').filter({ has: page.locator('svg') });
     await columns.first().click();
   }
 }
@@ -67,7 +67,7 @@ export async function setHangmanWord(page: Page, word: string): Promise<void> {
   // Wait for word input to appear (setter role)
   await page.waitForSelector('input[placeholder*="word"]', { timeout: 5000 });
   await page.fill('input[placeholder*="word"]', word);
-  await page.click('button:has-text("Set Word")');
+  await page.click('button:has-text("Set")');
 }
 
 export async function guessHangmanLetter(page: Page, letter: string): Promise<void> {

@@ -90,21 +90,6 @@ export function Room() {
     }).catch(() => navigate('/dashboard'));
   }, [roomId, token, navigate]);
 
-  /* Join room via socket */
-  useEffect(() => {
-    if (!socket || !isAuthenticated || !roomId) return;
-
-    socket.emit('room:join', { roomId }, (res: { error?: string }) => {
-      if (res?.error) {
-        addToast('error', res.error);
-      }
-    });
-
-    return () => {
-      socket.emit('room:leave', { roomId });
-    };
-  }, [socket, isAuthenticated, roomId, addToast]);
-
   /* State recovery function */
   const recoverState = useCallback(() => {
     if (!socket || !isAuthenticated || !roomId) return;
@@ -196,11 +181,22 @@ export function Room() {
     });
   }, [socket, isAuthenticated, roomId, navigate, addToast]);
 
-  /* State recovery after socket authentication */
+  /* Join room via socket */
   useEffect(() => {
     if (!socket || !isAuthenticated || !roomId) return;
-    recoverState();
-  }, [socket, isAuthenticated, roomId, recoverState]);
+
+    socket.emit('room:join', { roomId }, (res: { error?: string }) => {
+      if (res?.error) {
+        addToast('error', res.error);
+      } else {
+        recoverState();
+      }
+    });
+
+    return () => {
+      socket.emit('room:leave', { roomId });
+    };
+  }, [socket, isAuthenticated, roomId, addToast, recoverState]);
 
   /* Socket event listeners */
   useEffect(() => {
