@@ -17,10 +17,16 @@ export function initSocket(httpServer: HttpServer): Server {
 
   io.on('connection', (socket) => {
     socket.on('authenticate', (data: { token: string }, callback?: (res: { error?: string }) => void) => {
+      if (socket.data.authenticated) {
+        if (callback) callback({});
+        return;
+      }
+
       try {
         const decoded = jwt.verify(data.token, env.JWT_SECRET) as JwtPayload;
         socket.data.userId = decoded.userId;
         socket.data.username = decoded.username;
+        socket.data.authenticated = true;
 
         /* INV-008: Cancel any pending disconnect timer */
         cancelDisconnectTimer(decoded.userId);

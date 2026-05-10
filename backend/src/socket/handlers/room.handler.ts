@@ -274,7 +274,12 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
     socket.leave(roomId);
     socketRoomMap.delete(socket.id);
 
-    socket.to(roomId).emit('room:user_left', { userId, username });
+    const sockets = await io.in(roomId).fetchSockets();
+    const hasOtherSockets = sockets.some((s) => s.data.userId === userId && s.id !== socket.id);
+
+    if (!hasOtherSockets) {
+      socket.to(roomId).emit('room:user_left', { userId, username });
+    }
   });
 
   socket.on('message:send', async (data: { roomId: string; content: string }) => {
@@ -301,7 +306,13 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
     const roomId = socketRoomMap.get(socket.id);
     if (roomId) {
       socketRoomMap.delete(socket.id);
-      socket.to(roomId).emit('room:user_left', { userId, username });
+
+      const sockets = await io.in(roomId).fetchSockets();
+      const hasOtherSockets = sockets.some((s) => s.data.userId === userId && s.id !== socket.id);
+
+      if (!hasOtherSockets) {
+        socket.to(roomId).emit('room:user_left', { userId, username });
+      }
     }
   });
 }
