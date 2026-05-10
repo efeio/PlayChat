@@ -71,7 +71,7 @@ export class Hangman extends GameEngine {
       if (userId !== s.guesser) {
         return false;
       }
-      return true;
+      return false;
     }
 
     /* Check if move is a letter guess */

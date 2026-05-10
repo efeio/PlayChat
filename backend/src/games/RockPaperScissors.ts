@@ -119,7 +119,7 @@ export class RockPaperScissors extends GameEngine {
     return (state as RPSState).winner;
   }
 
-  getGameLog(move: Move, _userId: string, state: GameState): string {
+  getGameLog(_move: Move, _userId: string, state: GameState): string {
     const s = state as RPSState;
     if (s.lastRoundResult) {
       return `Round ${s.round - 1}: ${s.lastRoundResult}`;

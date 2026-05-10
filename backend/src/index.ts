@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { createServer } from 'http';
 import { register, login } from './controllers/auth.controller.js';
 import { list, create, getById } from './controllers/room.controller.js';
 import { authenticate } from './middleware/authenticate.js';
