@@ -4,7 +4,7 @@ import {
   addMemberToRoom,
   removeMemberFromRoom,
 } from '../../services/room.service.js';
-import { activeGames } from './game.handler.js';
+import { activeGames, handlePlayerLeftRoom } from './game.handler.js';
 import type { GameState } from '../../games/GameEngine.js';
 
 /* INV-001: Track which room each socket is in */
@@ -133,7 +133,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
             gameType: activeGameRecord.gameType,
             status: activeGameRecord.status,
             state: memoryGame.state,
-            players: activeGameRecord.players.map((p) => ({
+            players: activeGameRecord.players.map((p: any) => ({
               userId: p.userId,
               username: p.user.username,
               displayName: p.user.displayName,
@@ -149,7 +149,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
             gameType: activeGameRecord.gameType,
             status: activeGameRecord.status,
             state,
-            players: activeGameRecord.players.map((p) => ({
+            players: activeGameRecord.players.map((p: any) => ({
               userId: p.userId,
               username: p.user.username,
               displayName: p.user.displayName,
@@ -174,14 +174,14 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
           type: room.type,
           maxMembers: room.maxMembers,
         },
-        members: room.members.map((m) => ({
+        members: room.members.map((m: any) => ({
           userId: m.userId,
           username: m.user.username,
           displayName: m.user.displayName,
           role: m.role as 'OWNER' | 'MEMBER' | 'SPECTATOR',
           isOnline: onlineUserIds.has(m.userId),
         })),
-        messages: room.messages.map((msg) => ({
+        messages: room.messages.map((msg: any) => ({
           id: msg.id,
           content: msg.content,
           type: msg.type as 'CHAT' | 'GAME_LOG',
@@ -225,7 +225,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
       }
 
       /* Check if user is already a member (e.g., OWNER who created the room) */
-      const existingMember = room.members.find((m) => m.userId === userId);
+      const existingMember = room.members.find((m: any) => m.userId === userId);
 
       /* INV-004: If game is in progress, new joiners become spectators */
       const activeGame = room.games[0];
@@ -279,6 +279,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
 
     if (!hasOtherSockets) {
       socket.to(roomId).emit('room:user_left', { userId, username });
+      await handlePlayerLeftRoom(io, userId, roomId);
     }
   });
 

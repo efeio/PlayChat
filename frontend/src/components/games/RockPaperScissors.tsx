@@ -43,6 +43,9 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
     if (!hasChosen && selected !== null) {
       setSelected(null);
     }
+    return () => {
+      setSelected(null);
+    }
   }, [hasChosen, selected]);
 
   return (
