@@ -46,7 +46,7 @@ export function Register() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center p-12 bg-bg-surface border-r border-border relative">
+      <div className="hidden lg:flex w-1/2 flex-col justify-center items-center p-12 bg-bg-surface border-r border-border relative">
         <div className="absolute top-8 left-8 flex items-center gap-2.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-primary">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -54,7 +54,7 @@ export function Register() {
           <span className="text-text-primary font-semibold text-xl tracking-tight">PlayChat</span>
         </div>
 
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md flex flex-col items-start">
           <div className="w-12 h-0.5 bg-text-primary mb-10" />
 
           <h2 className="text-5xl xl:text-6xl font-semibold text-text-primary leading-tight tracking-tight mb-6">
@@ -70,8 +70,8 @@ export function Register() {
       </div>
 
       {/* Right panel (form) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-12 relative">
-        <div className="w-full max-w-md mx-auto">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-12 relative">
+        <div className="w-full max-w-sm bg-[#1c1c1e] p-8 rounded-3xl border border-white/5 shadow-2xl">
           <h1 className="text-3xl lg:text-4xl font-semibold text-text-primary mb-2 tracking-tight">
             Create account.
           </h1>

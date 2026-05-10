@@ -80,26 +80,34 @@ export function Dashboard() {
         <div className="p-4 sm:p-8">
           {/* Create room modal */}
           {showCreate && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/40 p-4">
-              <div className="bg-bg-surface border border-white/10 rounded-3xl p-8 w-full max-w-md space-y-6">
-                <h2 className="text-xl font-semibold text-text-primary">Create Room</h2>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="w-full max-w-md bg-[#1c1c1e] border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col gap-6">
+                <h2 className="text-xl font-semibold text-white">Create Room</h2>
 
-                <Input
+                <input
                   id="room-name"
                   placeholder="Room name"
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
                   autoFocus
+                  className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/30"
                 />
 
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <Button variant="outlined" onClick={() => setShowCreate(false)}>
+                <div className="flex justify-end gap-3 w-full mt-2">
+                  <button
+                    onClick={() => setShowCreate(false)}
+                    className="px-6 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  >
                     Cancel
-                  </Button>
-                  <Button onClick={handleCreateRoom} disabled={!newRoomName.trim()}>
+                  </button>
+                  <button
+                    onClick={handleCreateRoom}
+                    disabled={!newRoomName.trim()}
+                    className="px-6 py-2 rounded-xl bg-white text-black font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Create
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -129,53 +137,54 @@ export function Dashboard() {
 
           {/* Room grid */}
           {!isLoading && rooms.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl mx-auto p-8">
               {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="bg-[#111] border border-white/5 rounded-xl p-5 flex flex-col gap-4 hover:bg-zinc-800 transition-colors"
+                  className="flex flex-col justify-between bg-[#1c1c1e] border border-white/5 rounded-2xl p-6 transition-all duration-200 hover:bg-[#252527] hover:border-white/15"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-text-primary font-semibold text-sm">
-                        {room.name}
-                      </h3>
-                      <p className="text-zinc-500 text-xs mt-0.5">
-                        {room.members.length}/{room.maxMembers} members
-                      </p>
+                  <div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-medium tracking-tight text-white">
+                          {room.name}
+                        </h3>
+                        <p className="text-sm text-zinc-500 mt-2">
+                          {room.members.length}/{room.maxMembers} members
+                        </p>
+                      </div>
+                      {room.games && room.games.length > 0 && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-green/10 text-accent-green border border-accent-green/20">
+                          LIVE
+                        </span>
+                      )}
                     </div>
-                    {room.games && room.games.length > 0 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-green/10 text-accent-green border border-accent-green/20">
-                        LIVE
-                      </span>
-                    )}
+
+                    {/* Members preview */}
+                    <div className="flex -space-x-2 mb-6">
+                      {room.members.slice(0, 5).map((m) => (
+                        <div
+                          key={m.id}
+                          className="w-7 h-7 rounded-full bg-bg-elevated border-2 border-bg-surface flex items-center justify-center text-[10px] text-text-secondary font-medium"
+                          title={m.user.displayName}
+                        >
+                          {m.user.displayName.charAt(0).toUpperCase()}
+                        </div>
+                      ))}
+                      {room.members.length > 5 && (
+                        <div className="w-7 h-7 rounded-full bg-bg-elevated border-2 border-bg-surface flex items-center justify-center text-[10px] text-text-muted">
+                          +{room.members.length - 5}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Members preview */}
-                  <div className="flex -space-x-2">
-                    {room.members.slice(0, 5).map((m) => (
-                      <div
-                        key={m.id}
-                        className="w-7 h-7 rounded-full bg-bg-elevated border-2 border-bg-surface flex items-center justify-center text-[10px] text-text-secondary font-medium"
-                        title={m.user.displayName}
-                      >
-                        {m.user.displayName.charAt(0).toUpperCase()}
-                      </div>
-                    ))}
-                    {room.members.length > 5 && (
-                      <div className="w-7 h-7 rounded-full bg-bg-elevated border-2 border-bg-surface flex items-center justify-center text-[10px] text-text-muted">
-                        +{room.members.length - 5}
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    variant="outlined"
+                  <button
                     onClick={() => navigate(`/room/${room.id}`)}
-                    className="text-xs h-9"
+                    className="w-full mt-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white hover:text-black text-center transition-colors"
                   >
                     Join Room
-                  </Button>
+                  </button>
                 </div>
               ))}
             </div>

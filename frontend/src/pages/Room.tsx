@@ -392,7 +392,7 @@ export function Room() {
         {/* Game + Chat split */}
         <div className="flex-1 flex flex-col md:flex-row min-h-0">
           {/* Game area */}
-          <div className="flex-1 flex flex-col md:border-r border-border min-w-0">
+          <div className="flex-1 flex flex-col bg-black p-8 items-center justify-center min-w-0">
             {!activeGameId && !gameResult && (
               /* No game started */
               <div className="flex-1 flex flex-col items-center justify-center gap-6 p-4 sm:p-6">
@@ -468,7 +468,7 @@ export function Room() {
           </div>
 
           {/* Chat panel */}
-          <div className="w-80 shrink-0">
+          <div className="w-80 shrink-0 bg-[#1c1c1e] border-l border-white/5 p-6 flex flex-col">
             <ChatPanel roomId={roomId!} messages={messages} />
           </div>
         </div>
