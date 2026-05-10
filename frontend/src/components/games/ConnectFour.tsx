@@ -55,10 +55,9 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
             key={pid}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
               currentPlayerIndex === i && !isFinished
-                ? 'bg-bg-elevated text-text-primary'
-                : 'text-text-secondary'
+                ? 'bg-bg-elevated text-text-primary border border-border'
+                : 'text-text-secondary border border-transparent'
             }`}
-            style={currentPlayerIndex === i && !isFinished ? { borderWidth: '1px', borderColor: '#222222' } : undefined}
           >
             <div
               className={`w-4 h-4 rounded-full ${
@@ -73,7 +72,7 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
       </div>
 
       {/* Board */}
-      <div className="bg-bg-surface rounded-xl p-2 sm:p-3 max-w-full overflow-x-auto" style={{ borderWidth: '1px', borderColor: '#222222' }}>
+      <div className="bg-bg-surface rounded-xl p-2 sm:p-3 max-w-full overflow-x-auto border border-border">
         {/* Column headers (clickable) */}
         <div className="grid gap-1 sm:gap-1.5" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
           {Array.from({ length: COLS }).map((_, col) => (
@@ -104,8 +103,7 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
                   key={`${row}-${col}`}
                   onClick={() => handleColumnClick(col)}
                   disabled={isFinished || !isMyTurn || board[0][col] !== 0}
-                  style={{ borderWidth: '1px', borderColor: '#222222' }}
-                  className="w-11 h-11 sm:w-14 sm:h-14 bg-bg-elevated rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:cursor-default"
+                  className="w-11 h-11 sm:w-14 sm:h-14 bg-bg-elevated rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:cursor-default border border-border"
                 >
                   {cell !== 0 && (
                     <div
