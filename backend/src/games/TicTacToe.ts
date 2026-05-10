@@ -39,7 +39,7 @@ export class TicTacToe extends GameEngine {
     return true;
   }
 
-  applyMove(state: GameState, move: Move, userId: string): TicTacToeState {
+  applyMove(state: GameState, move: Move, _userId: string): TicTacToeState {
     const s = state as TicTacToeState;
     const m = move as TicTacToeMove;
     const newBoard = [...s.board];
