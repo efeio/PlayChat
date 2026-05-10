@@ -29,7 +29,7 @@ export function Login() {
     <div className="min-h-screen flex">
       {/* Left panel */}
       <div className="hidden lg:flex w-1/2 flex-col justify-center px-16 xl:px-24 bg-bg-surface border-r border-border relative">
-        <div className="flex items-center gap-2.5 mb-8">
+        <div className="absolute top-8 left-16 xl:left-24 flex items-center gap-2.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-primary">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
@@ -38,7 +38,7 @@ export function Login() {
 
         <div className="w-12 h-0.5 bg-text-primary mb-10" />
 
-        <h2 className="text-5xl xl:text-6xl font-semibold text-text-primary leading-tight tracking-tight mb-6">
+        <h2 className="text-5xl xl:text-6xl font-semibold text-text-primary leading-tight tracking-tight mb-4">
           Chat, play,<br />
           <span className="text-text-secondary">compete</span><br />
           together.
@@ -54,11 +54,11 @@ export function Login() {
         <h1 className="text-3xl lg:text-4xl font-semibold text-text-primary mb-2 tracking-tight">
           Welcome back.
         </h1>
-        <p className="text-text-secondary text-sm mb-8">
+        <p className="text-text-secondary text-sm mb-6">
           Pick up where you left off.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-sm">
+        <form onSubmit={handleSubmit} className="space-y-3 max-w-sm">
           {error && (
             <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20">
               <p className="text-red-400 text-sm">{error}</p>
@@ -83,7 +83,7 @@ export function Login() {
             required
           />
 
-          <div className="pt-2">
+          <div className="pt-1">
             <Button type="submit" fullWidth disabled={isSubmitting}>
               {isSubmitting ? 'Signing in...' : 'SIGN IN'}
             </Button>
