@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
@@ -285,10 +285,10 @@ export function Room() {
   const isOwner = myRole === 'OWNER' || members.some((m) => m.userId === user?.id && m.role === 'OWNER');
 
   /* Build player display list */
-  const playerDisplayList = gamePlayers.map((gp) => ({
+  const playerDisplayList = useMemo(() => gamePlayers.map((gp) => ({
     userId: gp.userId,
     displayName: gp.user.displayName,
-  }));
+  })), [gamePlayers]);
 
   /* Render game component */
   const renderGame = () => {

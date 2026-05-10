@@ -62,6 +62,8 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
   return (
     <div
       onClick={() => onDismiss(id)}
+      role="alert"
+      aria-live="polite"
       className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[320px] max-w-md`}
     >
       <div className="shrink-0 mt-0.5">{getIcon()}</div>
