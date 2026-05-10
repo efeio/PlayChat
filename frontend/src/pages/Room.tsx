@@ -406,17 +406,17 @@ export function Room() {
                 </div>
 
                 {isOwner && (
-                  <div className="flex flex-wrap justify-center gap-4 max-w-2xl mx-auto">
+                  <div className="flex flex-wrap justify-center gap-5 max-w-3xl mx-auto">
                     {GAME_TYPES.map((game) => (
                       <button
                         key={game.value}
                         onClick={() => handleStartGame(game.value)}
-                        className="flex flex-col items-center justify-center bg-[#161618] border border-white/10 rounded-3xl w-40 h-32 hover:bg-white/5 hover:border-white/20 transition-all duration-300 cursor-pointer group"
+                        className="flex flex-col items-center justify-center bg-[#1a1a1a] border border-white/20 rounded-3xl w-48 h-40 hover:bg-[#222] hover:border-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all duration-300 cursor-pointer group"
                       >
-                        <p className="text-white font-medium group-hover:-translate-y-1 transition-transform">
+                        <p className="text-white text-lg font-bold group-hover:-translate-y-1 transition-transform">
                           {game.label}
                         </p>
-                        <p className="text-zinc-500 text-xs mt-2">Start game</p>
+                        <p className="text-zinc-500 text-sm mt-3">Start game</p>
                       </button>
                     ))}
                   </div>

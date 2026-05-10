@@ -83,9 +83,9 @@ export function Dashboard() {
         <div className="p-4 sm:p-8">
           {/* Create room modal */}
           {showCreate && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-              <div className="w-full max-w-md bg-[#161618]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl flex flex-col gap-6">
-                <h2 className="text-xl font-semibold text-white">Create Room</h2>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+              <div className="w-full max-w-lg bg-[#1a1a1a] border border-white/20 rounded-3xl p-10 shadow-2xl flex flex-col gap-8">
+                <h2 className="text-2xl font-bold text-white">Create Room</h2>
 
                 <input
                   id="room-name"
@@ -94,20 +94,20 @@ export function Dashboard() {
                   onChange={(e) => setNewRoomName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
                   autoFocus
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-200"
+                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-white text-base placeholder-zinc-500 focus:outline-none focus:border-white/40 focus:bg-white/[0.15] transition-all duration-200"
                 />
 
-                <div className="flex justify-end gap-2 w-full mt-2">
+                <div className="flex justify-end gap-3 w-full">
                   <button
                     onClick={() => setShowCreate(false)}
-                    className="bg-transparent text-zinc-400 font-medium rounded-full px-6 py-3 hover:text-white hover:bg-white/5 transition-all"
+                    className="bg-transparent text-zinc-400 font-semibold rounded-full px-8 py-3.5 hover:text-white hover:bg-white/5 transition-all border border-white/20"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateRoom}
                     disabled={!newRoomName.trim()}
-                    className="bg-white text-black font-semibold rounded-full px-6 py-3 hover:scale-[1.02] hover:bg-gray-100 transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-white text-black font-bold rounded-full px-8 py-3.5 hover:scale-[1.02] hover:bg-gray-100 transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Create
                   </button>
@@ -144,38 +144,38 @@ export function Dashboard() {
               {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="flex flex-col justify-between bg-[#111111] border border-white/5 rounded-2xl p-6 transition-all duration-200 hover:bg-[#161618] hover:border-white/10"
+                  className="flex flex-col justify-between bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 transition-all duration-200 hover:bg-[#222] hover:border-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)]"
                 >
                   <div>
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-5">
                       <div>
-                        <h3 className="text-xl font-medium tracking-tight text-white">
+                        <h3 className="text-2xl font-bold tracking-tight text-white">
                           {room.name}
                         </h3>
-                        <p className="text-sm text-zinc-500 mt-2">
+                        <p className="text-sm text-zinc-500 mt-3">
                           {room.members.length}/{room.maxMembers} members
                         </p>
                       </div>
                       {room.games && room.games.length > 0 && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-green/10 text-accent-green border border-accent-green/20">
+                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-semibold">
                           LIVE
                         </span>
                       )}
                     </div>
 
                     {/* Members preview */}
-                    <div className="flex -space-x-2 mb-6">
+                    <div className="flex -space-x-2 mb-8">
                       {room.members.slice(0, 5).map((m) => (
                         <div
                           key={m.id}
-                          className="w-7 h-7 rounded-full bg-white/5 border-2 border-[#111111] flex items-center justify-center text-[10px] text-zinc-400 font-medium"
+                          className="w-9 h-9 rounded-full bg-white/10 border-2 border-[#1a1a1a] flex items-center justify-center text-xs text-zinc-300 font-semibold"
                           title={m.user.displayName}
                         >
                           {m.user.displayName.charAt(0).toUpperCase()}
                         </div>
                       ))}
                       {room.members.length > 5 && (
-                        <div className="w-7 h-7 rounded-full bg-white/5 border-2 border-[#111111] flex items-center justify-center text-[10px] text-zinc-500">
+                        <div className="w-9 h-9 rounded-full bg-white/10 border-2 border-[#1a1a1a] flex items-center justify-center text-xs text-zinc-500 font-semibold">
                           +{room.members.length - 5}
                         </div>
                       )}
@@ -184,7 +184,7 @@ export function Dashboard() {
 
                   <button
                     onClick={() => navigate(`/room/${room.id}`)}
-                    className="w-full mt-6 py-3 rounded-full bg-white text-black font-semibold hover:scale-[1.02] hover:bg-gray-100 text-center transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                    className="w-full py-4 rounded-full bg-white text-black font-bold hover:scale-[1.02] hover:bg-gray-100 text-center transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.15)]"
                   >
                     Join Room
                   </button>

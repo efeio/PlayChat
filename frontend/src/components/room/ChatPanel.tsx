@@ -61,19 +61,19 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-white/5 shrink-0">
-        <div className="flex gap-2">
+      <div className="p-4 border-t border-white/10 shrink-0">
+        <div className="flex gap-3">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-200 text-sm"
+            className="flex-1 bg-white/10 border border-white/20 rounded-2xl px-5 py-3.5 text-white text-base placeholder-zinc-500 focus:outline-none focus:border-white/40 focus:bg-white/[0.15] transition-all duration-200"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim()}
-            className="bg-white text-black font-semibold rounded-full px-6 py-3 hover:scale-[1.02] hover:bg-gray-100 transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed text-sm"
+            className="bg-white text-black font-bold rounded-full px-7 py-3.5 hover:scale-[1.02] hover:bg-gray-100 transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.15)] disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed text-sm"
           >
             Send
           </button>

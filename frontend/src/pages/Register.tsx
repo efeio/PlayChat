@@ -70,18 +70,18 @@ export function Register() {
       </div>
 
       {/* Right panel (form) */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-12 bg-black relative">
-        <div className="w-full max-w-sm bg-[#161618]/80 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/10 shadow-2xl">
-          <h1 className="text-3xl lg:text-4xl font-semibold text-text-primary mb-2 tracking-tight">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 bg-black relative">
+        <div className="w-full max-w-md">
+          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">
             Create account.
           </h1>
-          <p className="text-text-secondary text-sm mb-8">
+          <p className="text-zinc-400 text-base mb-10">
             Join rooms, chat, and start playing.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
           {displayError && (
-            <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20">
+            <div className="px-5 py-4 rounded-2xl bg-red-500/10 border border-red-500/20">
               <p className="text-red-400 text-sm">{displayError}</p>
             </div>
           )}
@@ -129,19 +129,19 @@ export function Register() {
             required
           />
 
-          <p className="text-[11px] text-text-muted">
+          <p className="text-xs text-zinc-500 pt-2">
             By registering, you agree to the Terms of Service and Privacy Policy.
           </p>
 
-          <div className="pt-2">
+          <div className="pt-3">
             <Button type="submit" fullWidth disabled={isSubmitting}>
               {isSubmitting ? 'Creating account...' : 'CREATE ACCOUNT'}
             </Button>
           </div>
 
-          <p className="text-center text-xs text-text-secondary pt-4">
+          <p className="text-center text-sm text-zinc-500 pt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-text-primary font-semibold hover:underline">
+            <Link to="/login" className="text-white font-semibold hover:underline">
               Sign in
             </Link>
           </p>
