@@ -172,8 +172,8 @@ export function registerGameHandlers(io: Server, socket: Socket) {
             if (callback) callback({ error: 'Only the Word Guesser can guess letters' });
             return;
           }
-          if (move.word !== undefined && userId !== hangmanState.setter) {
-            if (callback) callback({ error: 'Only the Word Setter can submit the word' });
+          if (move.word !== undefined && userId !== hangmanState.guesser) {
+            if (callback) callback({ error: 'Only the Word Guesser can guess the word' });
             return;
           }
         }

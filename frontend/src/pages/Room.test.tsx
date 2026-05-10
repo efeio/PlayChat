@@ -391,6 +391,18 @@ describe('Room - State Recovery Error Handling', () => {
   it('should show error toast and redirect to dashboard when room not found', async () => {
     renderRoom();
 
+    // Wait for room:join to be called, then trigger callback to call room:get_state
+    await waitFor(() => {
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'room:join',
+        { roomId: 'test-room-id' },
+        expect.any(Function)
+      );
+    });
+
+    const joinCallback = (mockSocket.emit as ReturnType<typeof vi.fn>).mock.calls.find(c => c[0] === 'room:join')?.[2];
+    if (joinCallback) joinCallback({});
+
     // Wait for room:get_state to be called
     await waitFor(() => {
       expect(mockSocket.emit).toHaveBeenCalledWith(
@@ -421,6 +433,18 @@ describe('Room - State Recovery Error Handling', () => {
   it('should show error toast and redirect to dashboard when not a member', async () => {
     renderRoom();
 
+    // Wait for room:join to be called, then trigger callback to call room:get_state
+    await waitFor(() => {
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'room:join',
+        { roomId: 'test-room-id' },
+        expect.any(Function)
+      );
+    });
+
+    const joinCallback = (mockSocket.emit as ReturnType<typeof vi.fn>).mock.calls.find(c => c[0] === 'room:join')?.[2];
+    if (joinCallback) joinCallback({});
+
     // Wait for room:get_state to be called
     await waitFor(() => {
       expect(mockSocket.emit).toHaveBeenCalledWith(
@@ -450,6 +474,18 @@ describe('Room - State Recovery Error Handling', () => {
 
   it('should show error toast and retry button for failed to fetch state error', async () => {
     renderRoom();
+
+    // Wait for room:join to be called, then trigger callback to call room:get_state
+    await waitFor(() => {
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'room:join',
+        { roomId: 'test-room-id' },
+        expect.any(Function)
+      );
+    });
+
+    const joinCallback = (mockSocket.emit as ReturnType<typeof vi.fn>).mock.calls.find(c => c[0] === 'room:join')?.[2];
+    if (joinCallback) joinCallback({});
 
     // Wait for room:get_state to be called
     await waitFor(() => {
@@ -490,6 +526,18 @@ describe('Room - State Recovery Error Handling', () => {
 
   it('should clear error state on successful retry', async () => {
     renderRoom();
+
+    // Wait for room:join to be called, then trigger callback to call room:get_state
+    await waitFor(() => {
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'room:join',
+        { roomId: 'test-room-id' },
+        expect.any(Function)
+      );
+    });
+
+    const joinCallback = (mockSocket.emit as ReturnType<typeof vi.fn>).mock.calls.find(c => c[0] === 'room:join')?.[2];
+    if (joinCallback) joinCallback({});
 
     // Wait for room:get_state to be called
     await waitFor(() => {

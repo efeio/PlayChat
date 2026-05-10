@@ -33,9 +33,9 @@ test.describe('Architectural Noir Design System Verification', () => {
     await page.click('button:has-text("Tic-Tac-Toe")');
     
     // Wait for game board
-    await page.waitForSelector('.grid-cols-3', { timeout: 10000 });
+    await page.waitForSelector('.grid\.grid-cols-3', { timeout: 10000 });
 
-    const gameBoard = page.locator('.grid-cols-3').first();
+    const gameBoard = page.locator('.grid\.grid-cols-3').first();
     const cells = gameBoard.locator('button');
     const cellCount = await cells.count();
     expect(cellCount).toBe(9);

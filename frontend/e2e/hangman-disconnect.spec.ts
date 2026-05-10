@@ -1,5 +1,5 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test';
-import { generateTestUser, registerUser } from './helpers/auth.helper';
+import { generateTestUser, registerUser, loginUser } from './helpers/auth.helper';
 import { createRoom, joinRoom, startGame, setHangmanWord, guessHangmanLetter, waitForGameEnd } from './helpers/room.helper';
 
 /**
@@ -52,12 +52,6 @@ test.describe('Hangman Disconnect Timeout', () => {
     await expect(page1.locator('text=/Word Setter/')).toBeVisible();
     await expect(page2.locator('text=/Word Guesser/')).toBeVisible();
 
-    // User 1 (Setter) sets the word
-    await setHangmanWord(page1, 'PLAYWRIGHT');
-
-    // Wait for word to be set
-    await page2.waitForTimeout(2000);
-
     // User 2 (Guesser) makes one guess
     await guessHangmanLetter(page2, 'A');
     await page2.waitForTimeout(1000);
@@ -77,7 +71,7 @@ test.describe('Hangman Disconnect Timeout', () => {
 
     // Verify User 1 (Setter) is declared winner
     await expect(page1.locator(`text=/${user1.displayName} wins/`)).toBeVisible();
-    await expect(page1.locator('text=/disconnected/')).toBeVisible();
+    await expect(page1.locator('text=/disconnected/').first()).toBeVisible();
   });
 
   test('Setter Disconnects - Guesser Wins', async () => {
@@ -90,10 +84,6 @@ test.describe('Hangman Disconnect Timeout', () => {
     // User 1 starts Hangman game
     await startGame(page1, 'HANGMAN');
     await page1.waitForTimeout(2000);
-
-    // User 1 (Setter) sets the word
-    await setHangmanWord(page1, 'TESTING');
-    await page2.waitForTimeout(2000);
 
     // User 2 (Guesser) makes one guess
     await guessHangmanLetter(page2, 'E');
@@ -114,7 +104,7 @@ test.describe('Hangman Disconnect Timeout', () => {
 
     // Verify User 2 (Guesser) is declared winner
     await expect(page2.locator(`text=/${user2.displayName} wins/`)).toBeVisible();
-    await expect(page2.locator('text=/disconnected/')).toBeVisible();
+    await expect(page2.locator('text=/disconnected/').first()).toBeVisible();
   });
 
   test('Guesser Reconnects Before Timeout', async () => {
@@ -127,10 +117,6 @@ test.describe('Hangman Disconnect Timeout', () => {
     // User 1 starts Hangman game
     await startGame(page1, 'HANGMAN');
     await page1.waitForTimeout(2000);
-
-    // User 1 (Setter) sets the word
-    await setHangmanWord(page1, 'RECONNECT');
-    await page2.waitForTimeout(2000);
 
     // User 2 (Guesser) makes one guess
     await guessHangmanLetter(page2, 'R');
@@ -145,7 +131,7 @@ test.describe('Hangman Disconnect Timeout', () => {
     // User 2 reconnects
     context2 = await page1.context().browser()!.newContext();
     page2 = await context2.newPage();
-    await registerUser(page2, user2); // Re-login
+    await loginUser(page2, user2.email, user2.password);
     await joinRoom(page2, roomId);
     await page2.waitForTimeout(2000);
 

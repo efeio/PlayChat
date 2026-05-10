@@ -73,11 +73,11 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
     expect(elapsedTime).toBeLessThanOrEqual(32000);
 
     // Verify User 1 is declared winner
-    await expect(page1.locator('text=/wins/')).toBeVisible();
-    await expect(page1.locator(`text=/${user1.displayName} wins/`)).toBeVisible();
+    await expect(page1.locator('text=/wins/').first()).toBeVisible();
+    await expect(page1.locator(`text=/${user1.displayName} wins/`).first()).toBeVisible();
 
     // Verify disconnect reason is shown
-    await expect(page1.locator('text=/disconnected/')).toBeVisible();
+    await expect(page1.locator('text=/disconnected/').first()).toBeVisible();
   });
 
   test('Test Case 2: Reconnection Within Timeout', async () => {
@@ -107,14 +107,14 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
     // User 2 reconnects (create new context and login)
     context2 = await page1.context().browser()!.newContext();
     page2 = await context2.newPage();
-    await loginUser(page2, user2.username, user2.password);
+    await loginUser(page2, user2.email, user2.password);
     await joinRoom(page2, roomId);
 
     // Wait a moment for reconnection to register
     await page2.waitForTimeout(2000);
 
     // Verify game is still active (no winner declared)
-    await expect(page1.locator('text=/wins/')).not.toBeVisible({ timeout: 5000 });
+    await expect(page1.locator('text=/wins/').first()).not.toBeVisible({ timeout: 5000 });
     
     // Verify User 2 can still see the game
     await expect(page2.locator('text=/Your turn|Waiting for/')).toBeVisible();
@@ -172,8 +172,8 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
     expect(elapsedTime).toBeLessThanOrEqual(32000);
 
     // Verify both winners
-    await expect(page1.locator(`text=/${user1.displayName} wins/`)).toBeVisible();
-    await expect(page3.locator(`text=/${user3.displayName} wins/`)).toBeVisible();
+    await expect(page1.locator(`text=/${user1.displayName} wins/`).first()).toBeVisible();
+    await expect(page3.locator(`text=/${user3.displayName} wins/`).first()).toBeVisible();
 
     // Cleanup
     await context3.close();
@@ -207,7 +207,7 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
     expect(elapsedTime).toBeLessThanOrEqual(32000);
 
     // Verify User 1 is declared winner
-    await expect(page1.locator(`text=/${user1.displayName} wins/`)).toBeVisible();
+    await expect(page1.locator(`text=/${user1.displayName} wins/`).first()).toBeVisible();
   });
 
   test('Test Case 5: Both Players Disconnect', async () => {
@@ -269,7 +269,7 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
 
     // Wait for game to end
     await waitForGameEnd(page1, 5000);
-    await expect(page1.locator('text=/wins/')).toBeVisible();
+    await expect(page1.locator('text=/wins/').first()).toBeVisible();
 
     // User 2 disconnects after game ends
     await context2.close();
@@ -278,10 +278,10 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
     await page1.waitForTimeout(31000);
 
     // Verify no additional game end events (winner unchanged)
-    await expect(page1.locator(`text=/${user1.displayName} wins/`)).toBeVisible();
+    await expect(page1.locator(`text=/${user1.displayName} wins/`).first()).toBeVisible();
     
     // Verify no disconnect message appears
-    const disconnectMessages = await page1.locator('text=/disconnected/').count();
+    const disconnectMessages = await page1.locator('text=/disconnected/').first().count();
     expect(disconnectMessages).toBe(0);
   });
 
@@ -301,8 +301,8 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
 
     expect(elapsedTime).toBeGreaterThanOrEqual(28000);
     expect(elapsedTime).toBeLessThanOrEqual(32000);
-    await expect(page1.locator(`text=/${user1.displayName} wins/`)).toBeVisible();
-    await expect(page1.locator('text=/disconnected/')).toBeVisible();
+    await expect(page1.locator(`text=/${user1.displayName} wins/`).first()).toBeVisible();
+    await expect(page1.locator('text=/disconnected/').first()).toBeVisible();
   });
 
   test('Test Case 8: Rapid Disconnect/Reconnect', async () => {
@@ -324,13 +324,13 @@ test.describe('Disconnect Timeout Verification (INV-008)', () => {
 
       context2 = await page1.context().browser()!.newContext();
       page2 = await context2.newPage();
-      await loginUser(page2, user2.username, user2.password);
+      await loginUser(page2, user2.email, user2.password);
       await joinRoom(page2, roomId);
       await page2.waitForTimeout(2000);
     }
 
     // Verify game is still active
-    await expect(page1.locator('text=/wins/')).not.toBeVisible({ timeout: 5000 });
+    await expect(page1.locator('text=/wins/').first()).not.toBeVisible({ timeout: 5000 });
     await expect(page2.locator('text=/Your turn|Waiting for/')).toBeVisible();
 
     // User 2 should be able to make a move

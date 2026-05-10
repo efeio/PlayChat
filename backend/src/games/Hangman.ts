@@ -67,9 +67,11 @@ export class Hangman extends GameEngine {
 
     /* Check if move is a word guess */
     if (m.word !== undefined) {
-      /* Only setter can submit word (for future word-setting feature) */
-      /* Currently word is auto-generated, so reject word submissions */
-      return false;
+      /* Only guesser can guess words */
+      if (userId !== s.guesser) {
+        return false;
+      }
+      return true;
     }
 
     /* Check if move is a letter guess */
