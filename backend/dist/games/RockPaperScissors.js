@@ -46,17 +46,17 @@ export class RockPaperScissors extends GameEngine {
         const newScores = { ...s.scores };
         let result;
         if (c1 === c2) {
-            result = 'Draw!';
+            result = 'draw';
         }
         else if ((c1 === 'rock' && c2 === 'scissors') ||
             (c1 === 'paper' && c2 === 'rock') ||
             (c1 === 'scissors' && c2 === 'paper')) {
             newScores[p1] = (newScores[p1] || 0) + 1;
-            result = `${p1} wins the round!`;
+            result = p1;
         }
         else {
             newScores[p2] = (newScores[p2] || 0) + 1;
-            result = `${p2} wins the round!`;
+            result = p2;
         }
         const resetChoices = {};
         for (const p of s.players) {
@@ -93,10 +93,10 @@ export class RockPaperScissors extends GameEngine {
     getWinner(state) {
         return state.winner;
     }
-    getGameLog(move, _userId, state) {
+    getGameLog(_move, _userId, state) {
         const s = state;
         if (s.lastRoundResult) {
-            return `Round ${s.round - 1}: ${s.lastRoundResult}`;
+            return `made their choice. Round ${s.round - 1} completed!`;
         }
         return 'made their choice';
     }

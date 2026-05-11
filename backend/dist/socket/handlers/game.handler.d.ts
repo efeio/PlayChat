@@ -4,6 +4,7 @@ declare const activeGames: Map<string, {
     engine: GameEngine;
     state: GameState;
     gameId: string;
+    roomId: string;
 }>;
 export declare function registerGameHandlers(io: Server, socket: Socket): void;
 export declare function cancelDisconnectTimer(userId: string): void;

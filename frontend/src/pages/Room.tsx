@@ -212,7 +212,10 @@ export function Room() {
     };
 
     const onMessageReceived = (message: Message) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        const next = [...prev, message];
+        return next.length > 100 ? next.slice(next.length - 100) : next;
+      });
     };
 
     const onGameStarted = (data: GameStartedEvent) => {
@@ -234,12 +237,20 @@ export function Room() {
       }
       
       if (data.result === 'draw') {
-        addToast('success', 'Game ended in a draw!');
+        addToast('info', 'Game ended in a draw!');
       } else if (data.winnerId) {
-        // Use gamePlayers state directly to avoid stale closure
         setGamePlayers((currentPlayers) => {
           const winner = currentPlayers.find((p) => p.userId === data.winnerId);
-          addToast('success', `${winner?.user.displayName || 'Player'} wins!`);
+          const isWinner = data.winnerId === user?.id;
+          const isLoser = currentPlayers.some(p => p.userId === user?.id) && !isWinner;
+
+          if (isWinner) {
+            addToast('success', 'You won the game!');
+          } else if (isLoser) {
+            addToast('error', `${winner?.user.displayName || 'Opponent'} won the game.`);
+          } else {
+            addToast('info', `${winner?.user.displayName || 'Player'} won the game!`);
+          }
           return currentPlayers;
         });
       }
@@ -277,7 +288,7 @@ export function Room() {
       socket.off('game:state', onGameState);
       socket.off('game:end', onGameEnd);
     };
-  }, [socket, isAuthenticated]);
+  }, [socket, isAuthenticated, user?.id]);
 
   /* Game actions */
   const handleStartGame = useCallback((gameType: GameType) => {
@@ -442,16 +453,11 @@ export function Room() {
 
                 {gameResult && (
                   <div className="mt-6 text-center">
-                    <p className="text-white font-semibold text-sm sm:text-base">
-                      {gameResult.result === 'draw'
-                        ? 'Game ended in a draw!'
-                        : `Winner: ${playerDisplayList.find((p) => p.userId === gameResult.winnerId)?.displayName || 'Unknown'}`}
-                    </p>
                     {gameResult.reason === 'disconnect_timeout' && (
                       <p className="text-text-muted text-xs mt-1">Opponent disconnected</p>
                     )}
                     {isOwner && (
-                      <div className="mt-4">
+                      <div className="mt-4 flex justify-center gap-3">
                         <Button
                           variant="outlined"
                           onClick={() => {
@@ -462,7 +468,17 @@ export function Room() {
                             setGameResult(null);
                           }}
                         >
-                          New Game
+                          Change Game
+                        </Button>
+                        <Button
+                          variant="primary"
+                          onClick={() => {
+                            if (activeGameType) {
+                              handleStartGame(activeGameType);
+                            }
+                          }}
+                        >
+                          Play Again
                         </Button>
                       </div>
                     )}

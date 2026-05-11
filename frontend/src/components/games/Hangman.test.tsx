@@ -10,15 +10,12 @@ describe('Hangman Mobile Responsiveness', () => {
 
   const mockGameState = {
     word: 'HELLO',
-    guessedLetters: ['H', 'E'],
-    wrongCount: 2,
     players: ['user1', 'user2'],
-    winner: null,
-    setter: 'user1',
-    guesser: 'user2',
-    roles: {
-      user1: 'SETTER' as const,
-      user2: 'GUESSER' as const,
+    winner: null as string | null,
+    draw: false,
+    playerStates: {
+      user1: { guessedLetters: ['H'], wrongCount: 1 },
+      user2: { guessedLetters: ['H', 'E'], wrongCount: 2 },
     },
   };
 
@@ -282,7 +279,10 @@ describe('Hangman Mobile Responsiveness', () => {
         <Hangman
           gameState={{
             ...mockGameState,
-            guessedLetters: [], // No letters guessed yet
+            playerStates: {
+              user1: { guessedLetters: [], wrongCount: 0 },
+              user2: { guessedLetters: [], wrongCount: 0 },
+            },
           }}
           onMove={mockOnMove}
           currentUserId="user2"

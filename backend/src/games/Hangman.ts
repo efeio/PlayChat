@@ -11,15 +11,14 @@ const MAX_WRONG = 6;
 
 interface HangmanState extends GameState {
   word: string;
-  guessedLetters: string[];
-  wrongCount: number;
-  currentPlayerIndex: number;
   players: string[];
   winner: string | null;
-  setter: string;
-  guesser: string;
-  roles: {
-    [userId: string]: 'SETTER' | 'GUESSER';
+  draw?: boolean;
+  playerStates: {
+    [userId: string]: {
+      guessedLetters: string[];
+      wrongCount: number;
+    };
   };
 }
 
@@ -34,24 +33,16 @@ export class Hangman extends GameEngine {
       throw new Error('Hangman requires exactly 2 players');
     }
 
-    /* Deterministic role assignment: first player is setter, second is guesser */
-    const setter = players[0];
-    const guesser = players[1];
-
     const word = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
 
     return {
       word,
-      guessedLetters: [],
-      wrongCount: 0,
-      currentPlayerIndex: 1,
       players: [...players],
       winner: null,
-      setter,
-      guesser,
-      roles: {
-        [setter]: 'SETTER',
-        [guesser]: 'GUESSER',
+      draw: false,
+      playerStates: {
+        [players[0]]: { guessedLetters: [], wrongCount: 0 },
+        [players[1]]: { guessedLetters: [], wrongCount: 0 },
       },
     };
   }
@@ -61,26 +52,22 @@ export class Hangman extends GameEngine {
     const m = move as HangmanMove;
 
     /* Game already ended */
-    if (s.winner) {
+    if (s.winner || s.draw) {
+      return false;
+    }
+
+    const playerState = s.playerStates[userId];
+    if (!playerState || playerState.wrongCount >= MAX_WRONG) {
       return false;
     }
 
     /* Check if move is a word guess */
     if (m.word !== undefined) {
-      /* Only guesser can guess words */
-      if (userId !== s.guesser) {
-        return false;
-      }
-      return false;
+      return true;
     }
 
     /* Check if move is a letter guess */
     if (m.letter !== undefined) {
-      /* Only guesser can guess letters */
-      if (userId !== s.guesser) {
-        return false;
-      }
-
       const letter = m.letter.toUpperCase();
 
       /* Validate letter format */
@@ -89,7 +76,7 @@ export class Hangman extends GameEngine {
       }
 
       /* Check if letter already guessed */
-      if (s.guessedLetters.includes(letter)) {
+      if (playerState.guessedLetters.includes(letter)) {
         return false;
       }
 
@@ -100,45 +87,67 @@ export class Hangman extends GameEngine {
     return false;
   }
 
-  applyMove(state: GameState, move: Move, _userId: string): HangmanState {
+  applyMove(state: GameState, move: Move, userId: string): HangmanState {
     const s = state as HangmanState;
     const m = move as HangmanMove;
+    const playerState = s.playerStates[userId];
 
     if (m.word) {
       const guessWord = m.word.toUpperCase();
       if (guessWord === s.word) {
-        return { ...s, winner: s.guesser };
+        return { ...s, winner: userId };
       } else {
-        return { ...s, wrongCount: s.wrongCount + 1, winner: s.wrongCount + 1 >= MAX_WRONG ? s.setter : null };
+        const newWrongCount = playerState.wrongCount + 1;
+        const newPlayerStates = {
+          ...s.playerStates,
+          [userId]: { ...playerState, wrongCount: newWrongCount },
+        };
+        
+        let draw = false;
+        if (Object.values(newPlayerStates).every((ps) => ps.wrongCount >= MAX_WRONG)) {
+          draw = true;
+        }
+        
+        return { ...s, playerStates: newPlayerStates, draw };
       }
     }
 
     const letter = (m.letter as string).toUpperCase();
-    const newGuessed = [...s.guessedLetters, letter];
-    let newWrongCount = s.wrongCount;
+    const newGuessed = [...playerState.guessedLetters, letter];
+    let newWrongCount = playerState.wrongCount;
 
     if (!s.word.includes(letter)) {
       newWrongCount++;
     }
 
     let winner: string | null = null;
-    if (newWrongCount >= MAX_WRONG) {
-      winner = s.setter;
-    } else if (s.word.split('').every((c) => newGuessed.includes(c))) {
-      winner = s.guesser;
+    let draw = false;
+    
+    if (s.word.split('').every((c) => newGuessed.includes(c))) {
+      winner = userId;
+    }
+
+    const newPlayerStates = {
+      ...s.playerStates,
+      [userId]: { guessedLetters: newGuessed, wrongCount: newWrongCount },
+    };
+
+    if (!winner && Object.values(newPlayerStates).every((ps) => ps.wrongCount >= MAX_WRONG)) {
+      draw = true;
     }
 
     return {
       ...s,
-      guessedLetters: newGuessed,
-      wrongCount: newWrongCount,
+      playerStates: newPlayerStates,
       winner,
+      draw,
     };
   }
 
   checkResult(state: GameState): 'ongoing' | 'win' | 'draw' {
     const s = state as HangmanState;
     if (s.winner) return 'win';
+    if (s.draw) return 'draw';
     return 'ongoing';
   }
 
@@ -146,9 +155,11 @@ export class Hangman extends GameEngine {
     return (state as HangmanState).winner;
   }
 
-  getGameLog(move: Move, _userId: string, state: GameState): string {
+  getGameLog(move: Move, userId: string, state: GameState): string {
     const s = state as HangmanState;
     const m = move as HangmanMove;
+    const playerState = s.playerStates[userId];
+    const prevWrongCount = playerState ? playerState.wrongCount : 0; // Rough approximation for logging
 
     if (m.word) {
       const guessWord = (m.word as string).toUpperCase();
@@ -159,6 +170,6 @@ export class Hangman extends GameEngine {
     if (s.word.includes(letter)) {
       return `guessed letter "${letter}" — correct!`;
     }
-    return `guessed letter "${letter}" — wrong! (${s.wrongCount}/${MAX_WRONG})`;
+    return `guessed letter "${letter}" — wrong!`;
   }
 }

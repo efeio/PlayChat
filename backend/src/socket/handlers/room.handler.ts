@@ -83,7 +83,8 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
             },
           },
           messages: {
-            orderBy: { createdAt: 'asc' },
+            orderBy: { createdAt: 'desc' },
+            take: 100,
             include: {
               user: {
                 select: {
@@ -181,7 +182,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
           role: m.role as 'OWNER' | 'MEMBER' | 'SPECTATOR',
           isOnline: onlineUserIds.has(m.userId),
         })),
-        messages: room.messages.map((msg: any) => ({
+        messages: room.messages.reverse().map((msg: any) => ({
           id: msg.id,
           content: msg.content,
           type: msg.type as 'CHAT' | 'GAME_LOG',

@@ -5,14 +5,14 @@ const MAX_WRONG = 6;
 interface HangmanProps {
   gameState: {
     word: string;
-    guessedLetters: string[];
-    wrongCount: number;
     players: string[];
     winner: string | null;
-    setter: string;
-    guesser: string;
-    roles?: {
-      [userId: string]: 'SETTER' | 'GUESSER';
+    draw?: boolean;
+    playerStates: {
+      [userId: string]: {
+        guessedLetters: string[];
+        wrongCount: number;
+      };
     };
   };
   onMove: (move: { letter?: string; word?: string }) => void;
@@ -20,72 +20,45 @@ interface HangmanProps {
   players: { userId: string; displayName: string }[];
 }
 
-/**
- * Hangman Game Component
- * 
- * Role-Based Access Control:
- * - Word Setter: Assigned to player[0], cannot guess letters (UI prevents access)
- * - Word Guesser: Assigned to player[1], can guess letters and words
- * 
- * Error Handling:
- * - Client-side validation prevents invalid actions (UI is hidden for wrong roles)
- * - Server-side validation returns specific error messages if bypassed:
- *   - "Only the Word Guesser can guess letters"
- *   - "Only the Word Setter can submit the word"
- * - Error toasts are displayed by the parent Room component via onMove callback
- * 
- * Requirements: 2.4, 2.7
- */
-
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 export function Hangman({ gameState, onMove, currentUserId, players }: HangmanProps) {
   const [wordGuess, setWordGuess] = useState('');
-  const { guessedLetters, wrongCount, winner, setter, guesser, roles } = gameState;
-  const isGuesser = currentUserId === guesser;
-  const isSetter = currentUserId === setter;
-  const isFinished = !!winner;
+  const { word, winner, draw, playerStates } = gameState;
+  const isFinished = !!winner || draw;
+
+  // The current player's state
+  const myState = playerStates[currentUserId] || { guessedLetters: [], wrongCount: 0 };
+  const { guessedLetters, wrongCount } = myState;
   const remaining = MAX_WRONG - wrongCount;
+
+  // The opponent's state (for reference/UI)
+  const opponentId = gameState.players.find(id => id !== currentUserId) || '';
+  const opponentState = playerStates[opponentId] || { guessedLetters: [], wrongCount: 0 };
+  const opponentRemaining = MAX_WRONG - opponentState.wrongCount;
 
   const getPlayerName = (id: string) =>
     players.find((p) => p.userId === id)?.displayName || id;
 
-  const getUserRole = (userId: string): 'SETTER' | 'GUESSER' | null => {
-    if (roles) {
-      return roles[userId] || null;
-    }
-    if (userId === setter) return 'SETTER';
-    if (userId === guesser) return 'GUESSER';
-    return null;
-  };
-
-  const currentUserRole = getUserRole(currentUserId);
-
-  /* Build masked word display - only show to guesser */
-  const maskedWord = gameState.word
+  const maskedWord = word
     .split('')
     .map((c) => (guessedLetters.includes(c) || isFinished ? c : '_'))
     .join(' ');
 
   const handleLetterGuess = (letter: string) => {
-    if (!isGuesser || isFinished || guessedLetters.includes(letter)) return;
+    if (isFinished || guessedLetters.includes(letter) || wrongCount >= MAX_WRONG) return;
     onMove({ letter });
   };
 
   const handleWordGuess = () => {
-    if (!isGuesser || isFinished || !wordGuess.trim()) return;
+    if (isFinished || !wordGuess.trim() || wrongCount >= MAX_WRONG) return;
     onMove({ word: wordGuess.trim() });
     setWordGuess('');
   };
 
   useEffect(() => {
-    if (isFinished) {
-      setWordGuess('');
-    }
-    return () => {
-      setWordGuess('');
-    }
-  }, [isFinished]);
+    setWordGuess('');
+  }, [gameState.word, isFinished]);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -93,32 +66,30 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
       <div className="text-center">
         {isFinished ? (
           <p className="text-white font-semibold text-lg">
-            {winner === guesser
-              ? `${getPlayerName(guesser)} guessed the word!`
-              : `${getPlayerName(guesser)} couldn't guess — ${getPlayerName(setter)} wins!`}
+            {winner === currentUserId
+              ? 'You guessed the word! You win!'
+              : winner
+              ? `${getPlayerName(winner)} guessed the word first!`
+              : draw
+              ? "It's a draw! Both players ran out of guesses."
+              : 'Game over'}
           </p>
         ) : (
           <p className="text-text-secondary text-sm">
-            {isGuesser ? (
-              <span className="text-white font-medium">Guess the word!</span>
+            {wrongCount >= MAX_WRONG ? (
+              <span className="text-red-400 font-medium">You are out of guesses! Waiting for opponent...</span>
             ) : (
-              `Waiting for ${getPlayerName(guesser)} to guess...`
+              <span className="text-white font-medium">Guess the word before your opponent!</span>
             )}
           </p>
         )}
       </div>
 
-      {/* Roles */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs w-full max-w-md">
-        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 ${currentUserRole === 'SETTER' ? 'bg-bg-card text-white border-border-default' : 'bg-bg-elevated text-text-secondary border-border-subtle'}`}>
-          <span className="opacity-60">Word Setter:</span>{' '}
-          <span className="font-medium">{getPlayerName(setter)}</span>
-          {currentUserRole === 'SETTER' && <span className="ml-1.5 text-emerald-400">(You)</span>}
-        </div>
-        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 ${currentUserRole === 'GUESSER' ? 'bg-bg-card text-white border-border-default' : 'bg-bg-elevated text-text-secondary border-border-subtle'}`}>
-          <span className="opacity-60">Word Guesser:</span>{' '}
-          <span className="font-medium">{getPlayerName(guesser)}</span>
-          {currentUserRole === 'GUESSER' && <span className="ml-1.5 text-emerald-400">(You)</span>}
+      {/* Opponent Status */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs w-full max-w-md justify-center">
+        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 bg-bg-elevated text-text-secondary border-border-subtle`}>
+          <span className="opacity-60">{getPlayerName(opponentId)}:</span>{' '}
+          <span className="font-medium">{opponentRemaining} guesses left</span>
         </div>
       </div>
 
@@ -135,18 +106,18 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
       </p>
 
       {/* Word display */}
-      <div className="text-xl sm:text-2xl font-mono text-white tracking-[0.2em] sm:tracking-[0.3em] select-none">
+      <div className="text-xl sm:text-2xl font-mono text-white tracking-[0.2em] sm:tracking-[0.3em] select-none text-center">
         {maskedWord}
       </div>
 
       {/* Letter keyboard */}
-      {!isFinished && isGuesser && (
+      {!isFinished && wrongCount < MAX_WRONG && (
         <>
           <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 max-w-md px-2">
             {ALPHABET.map((letter) => {
               const used = guessedLetters.includes(letter);
-              const isWrong = used && !gameState.word.includes(letter);
-              const isCorrect = used && gameState.word.includes(letter);
+              const isWrong = used && !word.includes(letter);
+              const isCorrect = used && word.includes(letter);
               return (
                 <button
                   key={letter}

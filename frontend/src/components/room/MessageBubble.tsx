@@ -10,7 +10,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
   if (message.type === 'GAME_LOG') {
     return (
       <div className="flex justify-center py-1.5">
-        <span className="text-text-muted text-xs italic">
+        <span className="text-[#8E8E93] text-[11px] italic">
           {message.content}
         </span>
       </div>

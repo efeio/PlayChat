@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 interface TicTacToeProps {
   gameState: {
     board: (string | null)[];
@@ -11,6 +13,7 @@ interface TicTacToeProps {
 }
 
 export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacToeProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
   const { board, currentPlayerIndex, winner } = gameState;
   const isMyTurn = gameState.players[currentPlayerIndex] === currentUserId;
   const isDraw = !winner && board.every((c) => c !== null);
@@ -20,6 +23,16 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
     players.find((p) => p.userId === id)?.displayName || id;
 
   const currentTurnPlayer = gameState.players[currentPlayerIndex];
+
+  useEffect(() => {
+    setIsProcessing(false);
+  }, [gameState]);
+
+  const handleCellClick = (idx: number) => {
+    if (isFinished || !isMyTurn || isProcessing || !!board[idx]) return;
+    setIsProcessing(true);
+    onMove({ position: idx });
+  };
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -66,8 +79,8 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
         {board.map((cell, idx) => (
           <button
             key={idx}
-            onClick={() => onMove({ position: idx })}
-            disabled={isFinished || !isMyTurn || !!cell}
+            onClick={() => handleCellClick(idx)}
+            disabled={isFinished || !isMyTurn || isProcessing || !!cell}
             className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-elevated border border-border-subtle rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all duration-200 hover:bg-bg-card hover:border-border-default disabled:cursor-default cursor-pointer"
           >
             <span

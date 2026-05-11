@@ -8,7 +8,7 @@ interface TicTacToeState extends GameState {
 export declare class TicTacToe extends GameEngine {
     initialize(players: string[]): TicTacToeState;
     validateMove(state: GameState, move: Move, userId: string): boolean;
-    applyMove(state: GameState, move: Move, userId: string): TicTacToeState;
+    applyMove(state: GameState, move: Move, _userId: string): TicTacToeState;
     checkResult(state: GameState): 'ongoing' | 'win' | 'draw';
     getWinner(state: GameState): string | null;
     getGameLog(move: Move, _userId: string, state: GameState): string;

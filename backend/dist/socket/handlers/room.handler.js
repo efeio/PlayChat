@@ -34,7 +34,8 @@ export function registerRoomHandlers(io, socket) {
                         },
                     },
                     messages: {
-                        orderBy: { createdAt: 'asc' },
+                        orderBy: { createdAt: 'desc' },
+                        take: 100,
                         include: {
                             user: {
                                 select: {
@@ -125,7 +126,7 @@ export function registerRoomHandlers(io, socket) {
                     role: m.role,
                     isOnline: onlineUserIds.has(m.userId),
                 })),
-                messages: room.messages.map((msg) => ({
+                messages: room.messages.reverse().map((msg) => ({
                     id: msg.id,
                     content: msg.content,
                     type: msg.type,

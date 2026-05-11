@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 const ROWS = 6;
 const COLS = 7;
 
@@ -14,6 +16,7 @@ interface ConnectFourProps {
 }
 
 export function ConnectFour({ gameState, onMove, currentUserId, players }: ConnectFourProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
   const { board, currentPlayerIndex, winner } = gameState;
   const isMyTurn = gameState.players[currentPlayerIndex] === currentUserId;
   const isDraw = !winner && board[0].every((c) => c !== 0);
@@ -24,8 +27,13 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
 
   const currentTurnPlayer = gameState.players[currentPlayerIndex];
 
+  useEffect(() => {
+    setIsProcessing(false);
+  }, [gameState]);
+
   const handleColumnClick = (col: number) => {
-    if (isFinished || !isMyTurn || board[0][col] !== 0) return;
+    if (isFinished || !isMyTurn || isProcessing || board[0][col] !== 0) return;
+    setIsProcessing(true);
     onMove({ column: col });
   };
 
@@ -60,10 +68,10 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
             }`}
           >
             <div
-              className={`w-4 h-4 rounded-full ${
+              className={`w-4 h-4 rounded-full shadow-sm ${
                 i === 0
                   ? 'bg-white'
-                  : 'bg-text-secondary'
+                  : 'bg-[#007AFF]'
               }`}
             />
             <span>{getPlayerName(pid)}</span>
@@ -107,10 +115,10 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
                 >
                   {cell !== 0 && (
                     <div
-                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full transition-transform duration-200 ${
+                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full transition-transform duration-200 shadow-md ${
                         cell === 1
-                          ? 'bg-white'
-                          : 'bg-text-secondary'
+                          ? 'bg-white shadow-white/20'
+                          : 'bg-[#007AFF] shadow-[#007AFF]/30'
                       }`}
                     />
                   )}

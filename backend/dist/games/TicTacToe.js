@@ -26,7 +26,7 @@ export class TicTacToe extends GameEngine {
             return false;
         return true;
     }
-    applyMove(state, move, userId) {
+    applyMove(state, move, _userId) {
         const s = state;
         const m = move;
         const newBoard = [...s.board];

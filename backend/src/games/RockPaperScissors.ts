@@ -68,17 +68,17 @@ export class RockPaperScissors extends GameEngine {
     let result: string;
 
     if (c1 === c2) {
-      result = 'Draw!';
+      result = 'draw';
     } else if (
       (c1 === 'rock' && c2 === 'scissors') ||
       (c1 === 'paper' && c2 === 'rock') ||
       (c1 === 'scissors' && c2 === 'paper')
     ) {
       newScores[p1] = (newScores[p1] || 0) + 1;
-      result = `${p1} wins the round!`;
+      result = p1;
     } else {
       newScores[p2] = (newScores[p2] || 0) + 1;
-      result = `${p2} wins the round!`;
+      result = p2;
     }
 
     const resetChoices: Record<string, RPSChoice | null> = {};
@@ -122,7 +122,7 @@ export class RockPaperScissors extends GameEngine {
   getGameLog(_move: Move, _userId: string, state: GameState): string {
     const s = state as RPSState;
     if (s.lastRoundResult) {
-      return `Round ${s.round - 1}: ${s.lastRoundResult}`;
+      return `made their choice. Round ${s.round - 1} completed!`;
     }
     return 'made their choice';
   }

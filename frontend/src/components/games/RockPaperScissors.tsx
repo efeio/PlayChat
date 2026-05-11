@@ -65,7 +65,11 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
 
       {/* Last round result */}
       {lastRoundResult && (
-        <p className="text-text-muted text-xs italic">{lastRoundResult}</p>
+        <p className="text-text-muted text-xs italic">
+          {lastRoundResult === 'draw' 
+            ? 'Round ended in a draw!' 
+            : `${getPlayerName(lastRoundResult)} won the round!`}
+        </p>
       )}
 
       {/* Scores */}

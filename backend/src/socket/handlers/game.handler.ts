@@ -14,7 +14,10 @@ const gameEngines: Record<string, GameEngine> = {
 };
 
 /* In-memory game state store (demo: no Redis) */
-const activeGames = new Map<string, { engine: GameEngine; state: GameState; gameId: string }>();
+const activeGames = new Map<string, { engine: GameEngine; state: GameState; gameId: string; roomId: string }>();
+
+/* Synchronous lock for DB race conditions during game initialization */
+const startingGames = new Set<string>();
 
 /* INV-008: Disconnect timeout tracking */
 const disconnectTimers = new Map<string, NodeJS.Timeout>();
@@ -27,7 +30,14 @@ export function registerGameHandlers(io: Server, socket: Socket) {
     try {
       const { roomId, gameType } = data;
 
-      /* INV-003: Only room owner can start game */
+      if (startingGames.has(roomId)) {
+        if (callback) callback({ error: 'A game is already initializing' });
+        return;
+      }
+      startingGames.add(roomId);
+
+      try {
+        /* INV-003: Only room owner can start game */
       const membership = await prisma.roomMember.findFirst({
         where: { userId, roomId, role: 'OWNER' },
       });
@@ -65,6 +75,16 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         return;
       }
 
+      /* Ensure all players are actually online */
+      const sockets = await io.in(roomId).fetchSockets();
+      const onlineUserIds = new Set(sockets.map(s => (s.data as { userId: string }).userId));
+      const allOnline = members.every(m => onlineUserIds.has(m.userId));
+
+      if (!allOnline) {
+        if (callback) callback({ error: 'Cannot start game. An opponent is offline.' });
+        return;
+      }
+
       const playerIds = members.map((m: any) => m.userId);
       const gameState = engine.initialize(playerIds);
 
@@ -89,7 +109,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         },
       });
 
-      activeGames.set(game.id, { engine, state: gameState, gameId: game.id });
+      activeGames.set(game.id, { engine, state: gameState, gameId: game.id, roomId });
 
       /* Enhance players with gameRole for Hangman */
       const playersWithRoles = game.players.map((p: any) => {
@@ -132,30 +152,38 @@ export function registerGameHandlers(io: Server, socket: Socket) {
       io.to(roomId).emit('message:received', logMessage);
 
       if (callback) callback({});
+      } finally {
+        startingGames.delete(roomId);
+      }
     } catch {
       if (callback) callback({ error: 'Failed to start game' });
     }
   });
 
-  socket.on('game:move', async (data: { gameId: string; roomId: string; move: Record<string, unknown> }, callback?: (res: { error?: string }) => void) => {
+  socket.on('game:move', async (data: { gameId: string; move: Record<string, unknown> }, callback?: (res: { error?: string }) => void) => {
     try {
-      const { gameId, roomId, move } = data;
+      const { gameId, move } = data;
 
       const activeGame = activeGames.get(gameId);
       if (!activeGame) {
         if (callback) callback({ error: 'Game not found' });
         return;
       }
+      
+      const trustedRoomId = activeGame.roomId;
 
       /* INV-005: Spectators cannot make moves */
       const playerEntry = await prisma.gamePlayer.findFirst({
         where: { gameId, userId },
+        include: { user: { select: { displayName: true } } },
       });
 
       if (!playerEntry || playerEntry.role === 'SPECTATOR') {
         if (callback) callback({ error: 'Spectators cannot make moves' });
         return;
       }
+      
+      const displayName = playerEntry.user.displayName;
 
       const { engine, state } = activeGame;
 
@@ -186,7 +214,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
       activeGame.state = newState;
 
       /* Broadcast state immediately for fast UI sync */
-      io.to(roomId).emit('game:state', {
+      io.to(trustedRoomId).emit('game:state', {
         gameId,
         state: newState,
       });
@@ -198,19 +226,19 @@ export function registerGameHandlers(io: Server, socket: Socket) {
       });
 
       /* Create game log */
-      const logText = engine.getGameLog(move, username, newState);
+      const logText = engine.getGameLog(move, userId, newState);
       const logMessage = await prisma.message.create({
         data: {
-          content: `${username} ${logText}`,
+          content: `${displayName} ${logText}`,
           type: 'GAME_LOG',
           userId,
-          roomId,
+          roomId: trustedRoomId,
         },
         include: {
           user: { select: { id: true, username: true, displayName: true } },
         },
       });
-      io.to(roomId).emit('message:received', logMessage);
+      io.to(trustedRoomId).emit('message:received', logMessage);
 
       /* Check game result */
       const result = engine.checkResult(newState);
@@ -228,7 +256,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
 
         activeGames.delete(gameId);
 
-        io.to(roomId).emit('game:end', {
+        io.to(trustedRoomId).emit('game:end', {
           gameId,
           result,
           winnerId,
@@ -243,13 +271,13 @@ export function registerGameHandlers(io: Server, socket: Socket) {
             content: endLogText,
             type: 'GAME_LOG',
             userId,
-            roomId,
+            roomId: trustedRoomId,
           },
           include: {
             user: { select: { id: true, username: true, displayName: true } },
           },
         });
-        io.to(roomId).emit('message:received', endLogMsg);
+        io.to(trustedRoomId).emit('message:received', endLogMsg);
 
         /* Update stats */
         const gamePlayers = await prisma.gamePlayer.findMany({
@@ -257,6 +285,8 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         });
 
         for (const gp of gamePlayers) {
+          cancelDisconnectTimer(gp.userId);
+          
           if (result === 'draw') {
             await prisma.userStats.upsert({
               where: { userId: gp.userId },

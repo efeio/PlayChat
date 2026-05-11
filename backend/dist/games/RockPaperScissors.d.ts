@@ -15,7 +15,7 @@ export declare class RockPaperScissors extends GameEngine {
     applyMove(state: GameState, move: Move, userId: string): RPSState;
     checkResult(state: GameState): 'ongoing' | 'win' | 'draw';
     getWinner(state: GameState): string | null;
-    getGameLog(move: Move, _userId: string, state: GameState): string;
+    getGameLog(_move: Move, _userId: string, state: GameState): string;
 }
 export {};
 //# sourceMappingURL=RockPaperScissors.d.ts.map
