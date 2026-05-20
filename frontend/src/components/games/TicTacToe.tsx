@@ -47,7 +47,7 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
         ) : (
           <p className="text-text-secondary text-sm">
             {isMyTurn ? (
-              <span className="text-white font-medium">Your turn</span>
+              <span className="text-accent-yellow font-medium">Your turn</span>
             ) : (
               `Waiting for ${getPlayerName(currentTurnPlayer)}...`
             )}
@@ -62,35 +62,35 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
             key={pid}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all duration-200 ${
               currentPlayerIndex === i && !isFinished
-                ? 'bg-bg-card text-white border border-border-subtle'
-                : 'text-text-secondary'
+                ? 'bg-[#1B132B]/80 border border-white/10 backdrop-blur-md shadow-md'
+                : 'text-text-secondary border border-transparent'
             }`}
           >
-            <span className="font-semibold text-base">
+            <span className={`text-base font-black ${i === 0 ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]'}`}>
               {i === 0 ? 'X' : 'O'}
             </span>
-            <span>{getPlayerName(pid)}</span>
+            <span className={currentPlayerIndex === i && !isFinished ? 'text-white' : ''}>{getPlayerName(pid)}</span>
           </div>
         ))}
       </div>
 
       {/* Board */}
-      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 p-4 bg-[#1B132B]/80 rounded-2xl backdrop-blur-xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
         {board.map((cell, idx) => (
           <button
             key={idx}
             onClick={() => handleCellClick(idx)}
             disabled={isFinished || !isMyTurn || isProcessing || !!cell}
-            className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-elevated border border-border-subtle rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all duration-200 hover:bg-bg-card hover:border-border-default disabled:cursor-default cursor-pointer"
+            className="w-16 h-16 sm:w-20 sm:h-20 bg-[#120A1F]/50 rounded-xl flex items-center justify-center border border-white/5 hover:bg-white/5 transition-colors disabled:cursor-default disabled:hover:bg-[#120A1F]/50"
           >
             <span
-              className={
+              className={`text-4xl sm:text-5xl font-black ${
                 cell === 'X'
-                  ? 'text-white'
+                  ? 'text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]'
                   : cell === 'O'
-                  ? 'text-text-secondary'
+                  ? 'text-purple-400 drop-shadow-[0_0_12px_rgba(192,132,252,0.8)]'
                   : ''
-              }
+              }`}
             >
               {cell}
             </span>

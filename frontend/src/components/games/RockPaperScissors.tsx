@@ -92,8 +92,8 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
               disabled={hasChosen}
               className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl transition-all duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-default border ${
                 selected === choice
-                  ? 'bg-bg-card border-border-strong'
-                  : 'bg-bg-elevated border-border-subtle hover:border-border-default hover:bg-bg-card'
+                  ? 'bg-bg-surface border-border-focus shadow-[0_0_0_3px_rgba(250,204,21,0.08)]'
+                  : 'bg-bg-elevated border-border-default hover:border-border-focus hover:bg-[rgba(250,204,21,0.05)]'
               } ${hasChosen && selected !== choice ? 'opacity-30' : ''}`}
             >
               <span className="text-2xl sm:text-3xl">{ICONS[choice]}</span>

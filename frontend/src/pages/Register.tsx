@@ -46,16 +46,22 @@ export function Register() {
   return (
     <div className="min-h-screen flex bg-bg-base">
       {/* Left panel — branding */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-center items-center p-12 bg-bg-surface border-r border-border-subtle relative">
+      <div className="hidden lg:flex w-1/2 flex-col justify-center items-center p-12 bg-transparent relative">
         <div className="absolute top-8 left-8 flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#accentGradientReg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <defs>
+              <linearGradient id="accentGradientReg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FACC15" />
+                <stop offset="100%" stopColor="#A855F7" />
+              </linearGradient>
+            </defs>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          <span className="text-white font-semibold text-xl tracking-tight">PlayChat</span>
+          <span className="text-gradient font-semibold text-xl tracking-tight">PlayChat</span>
         </div>
 
         <div className="w-full max-w-md flex flex-col items-start">
-          <div className="w-12 h-0.5 bg-border-strong mb-10" />
+          <div className="w-12 h-0.5 bg-border-focus mb-10" />
 
           <h2 className="text-5xl xl:text-6xl font-semibold text-white leading-tight tracking-tight mb-6">
             Chat, play,<br />
@@ -70,9 +76,9 @@ export function Register() {
       </div>
 
       {/* Right panel — form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 bg-bg-base relative">
-        <div className="w-full max-w-md animate-fade-in">
-          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 bg-transparent relative z-10 backdrop-blur-sm">
+        <div className="w-full max-w-md animate-fade-in bg-[#1B132B]/80 backdrop-blur-2xl p-8 sm:p-10 rounded-[24px] border border-white/5 shadow-[0_0_80px_rgba(56,189,248,0.15),0_25px_50px_-12px_rgba(0,0,0,0.5)] relative">
+          <h1 className="text-3xl lg:text-4xl font-bold text-white mb-3 tracking-tight">
             Create account.
           </h1>
           <p className="text-text-secondary text-base mb-10">
@@ -81,8 +87,8 @@ export function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {displayError && (
-              <div className="rounded-2xl bg-red-950 border border-red-500/30" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
-                <p className="text-red-400 text-sm">{displayError}</p>
+              <div className="rounded-xl bg-status-error/10 border border-status-error/30 p-4">
+                <p className="text-status-error text-sm">{displayError}</p>
               </div>
             )}
 
@@ -129,13 +135,13 @@ export function Register() {
               required
             />
 
-            <p className="text-xs text-text-faint pt-2">
+            <p className="text-xs text-text-muted pt-2">
               By registering, you agree to the Terms of Service and Privacy Policy.
             </p>
 
             <div className="pt-3">
               <Button type="submit" fullWidth disabled={isSubmitting}>
-                {isSubmitting ? 'Creating account...' : 'CREATE ACCOUNT'}
+                {isSubmitting ? 'Creating account...' : 'Create account'}
               </Button>
             </div>
 

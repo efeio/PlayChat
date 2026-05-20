@@ -13,6 +13,7 @@ export interface RoomMember {
   userId: string;
   roomId: string;
   role: string;
+  isOnline?: boolean;
   user: {
     id: string;
     username: string;

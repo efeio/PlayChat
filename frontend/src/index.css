@@ -1,23 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* stylelint-disable-next-line at-rule-no-unknown */
+:root {
+  --bg-base: #120A1F;
+  --bg-surface: #1B132B;
+  --bg-elevated: #231840;
+  --bg-overlay: rgba(27, 19, 43, 0.85);
+
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-focus: rgba(250, 204, 21, 0.5);
+  --border-subtle: rgba(255, 255, 255, 0.03);
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #C0B3D0;
+  --text-muted: #6B5F80;
+  --text-inverse: #120A1F;
+
+  --accent-yellow: #FACC15;
+  --accent-purple: #A855F7;
+  --accent-purple-soft: #8B5CF6;
+  --accent-gradient: linear-gradient(135deg, #FACC15 0%, #A855F7 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #FDE047 0%, #C084FC 100%);
+
+  --status-online: #4ADE80;
+  --status-error: #F87171;
+  --status-success: #4ADE80;
+}
+
 @theme {
-  --color-bg-base: #000000;
-  --color-bg-surface: #0a0a0a;
-  --color-bg-elevated: #111111;
-  --color-bg-card: #161616;
-  --color-border-subtle: #1e1e1e;
-  --color-border-default: #2a2a2a;
-  --color-border-strong: #3a3a3a;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a0a0a0;
-  --color-text-muted: #666666;
-  --color-text-faint: #444444;
-  --color-accent: #4a7c59;
-  --color-input-bg: #1a1a1a;
-  --color-input-border: #2e2e2e;
-  --color-input-focus: #3d3d3d;
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-overlay: var(--bg-overlay);
+
+  --color-border-default: var(--border-default);
+  --color-border-focus: var(--border-focus);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-accent-yellow: var(--accent-yellow);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-soft: var(--accent-purple-soft);
+
+  --color-status-online: var(--status-online);
+  --color-status-error: var(--status-error);
+  --color-status-success: var(--status-success);
+
+  /* Fallbacks for existing classes used in codebase */
+  --color-bg-card: var(--bg-elevated);
+  --color-border-strong: var(--border-focus);
+  --color-text-faint: var(--text-muted);
+  --color-accent: var(--accent-purple);
+  --color-input-bg: var(--bg-elevated);
+  --color-input-border: var(--border-default);
+  --color-input-focus: var(--border-focus);
+  
   --font-family-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -29,14 +70,19 @@ html {
 }
 
 body {
-  background-color: #000000;
-  color: #a0a0a0;
+  background-color: var(--bg-base);
+  color: var(--text-secondary);
   min-height: 100dvh;
 }
 
 #root {
   min-height: 100dvh;
+  position: relative;
+  z-index: 1;
 }
+
+/* 2. BACKGROUND & ATMOSPHERE */
+/* Removed radial gradients to maintain a solid, clean deep midnight purple background */
 
 /* Thin scrollbar */
 ::-webkit-scrollbar {
@@ -46,19 +92,19 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
+  background: var(--border-default);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
+  background: var(--border-focus);
 }
 
 /* Autofill override */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #ffffff;
-  -webkit-box-shadow: 0 0 0px 1000px #1a1a1a inset;
+  -webkit-text-fill-color: var(--text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-elevated) inset;
   transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -93,4 +139,99 @@ input:-webkit-autofill:focus {
 }
 .animate-pulse-glow {
   animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* 3. SURFACES & CARDS (Classes) */
+.room-card {
+  background: rgba(27, 19, 43, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+.room-card:hover {
+  background: rgba(27, 19, 43, 0.9);
+  border-color: rgba(168, 85, 247, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(168, 85, 247, 0.15);
+}
+
+.sidebar-item-active {
+  background: rgba(168, 85, 247, 0.12);
+  border-left: 2px solid var(--accent-purple);
+  color: #FFFFFF;
+}
+.sidebar-item-inactive {
+  background: transparent;
+  color: var(--text-secondary);
+  border-left: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+.sidebar-item-inactive:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* 4. BUTTONS */
+.btn-primary {
+  background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #EC4899 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  height: 44px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 14px 0 rgba(168, 85, 247, 0.39);
+  transition: all 0.2s ease;
+}
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+  transform: scale(1.02);
+}
+
+.btn-outlined {
+  background: transparent;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  height: 44px;
+  transition: all 0.2s ease;
+}
+.btn-outlined:not(:disabled):hover {
+  border-color: rgba(168, 85, 247, 0.8);
+  color: #FFFFFF;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  transition: all 0.2s ease;
+}
+.btn-ghost:not(:disabled):hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
+}
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+.btn-danger:not(:disabled):hover {
+  border-color: var(--status-error);
+  color: var(--status-error);
+}
+
+/* 6. TYPOGRAPHY (Classes) */
+.page-title { color: #FFFFFF; font-size: 28px; font-weight: 600; }
+.section-title { color: #FFFFFF; font-size: 20px; font-weight: 600; }
+.card-title { color: #FFFFFF; font-size: 15px; font-weight: 600; }
+
+.text-gradient {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

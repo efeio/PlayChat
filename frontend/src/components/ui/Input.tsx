@@ -8,22 +8,21 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className = '', id, ...props }, ref) => {
     return (
-      <div className="space-y-2">
+      <div className="flex flex-col">
         {label && (
-          <label htmlFor={id} className="block text-sm font-medium text-text-secondary">
+          <label htmlFor={id} className="text-[13px] font-medium text-text-secondary mb-[6px]">
             {label}
           </label>
         )}
         <input
           ref={ref}
           id={id}
-          style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '20px', paddingRight: '20px' }}
-          className={`w-full bg-input-bg border border-input-border rounded-xl text-white text-base placeholder-text-muted focus:outline-none focus:border-border-strong focus:ring-1 focus:ring-border-strong transition-all duration-200 ${
-            error ? 'border-red-500 focus:ring-red-500/40' : ''
+          className={`w-full bg-[#120A1F]/50 border border-white/5 rounded-xl text-white text-sm placeholder-text-muted px-4 py-3 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200 backdrop-blur-md shadow-inner ${
+            error ? 'border-status-error focus:border-status-error focus:ring-status-error/50' : ''
           } ${className}`}
           {...props}
         />
-        {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+        {error && <p className="text-xs text-status-error mt-1">{error}</p>}
       </div>
     );
   }

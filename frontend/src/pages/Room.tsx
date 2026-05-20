@@ -368,7 +368,7 @@ export function Room() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Room header */}
-        <div className="h-14 flex items-center justify-between px-6 border-b border-border-subtle shrink-0">
+        <div className="h-14 flex items-center justify-between px-6 border-b border-border-default bg-bg-surface shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
@@ -390,10 +390,13 @@ export function Room() {
               {members.slice(0, 4).map((m) => (
                 <div
                   key={m.id}
-                  className="w-6 h-6 rounded-full bg-bg-card border border-bg-base flex items-center justify-center text-[9px] text-text-secondary font-medium"
+                  className="w-6 h-6 rounded-full bg-bg-surface border border-bg-elevated flex items-center justify-center text-[9px] text-text-secondary font-medium relative"
                   title={m.user.displayName}
                 >
                   {m.user.displayName.charAt(0).toUpperCase()}
+                  {m.isOnline && (
+                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-status-online border border-bg-surface"></span>
+                  )}
                 </div>
               ))}
             </div>
@@ -401,18 +404,18 @@ export function Room() {
         </div>
 
         {/* Game + Chat split */}
-        <div className="flex-1 flex flex-col md:flex-row min-h-0">
-          {/* Game area */}
-          <div className="flex-1 flex flex-col p-8 items-center justify-center min-w-0">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+          {/* Game area (Center) */}
+          <div className="flex-1 flex flex-col items-center justify-center min-w-0 overflow-hidden game-panel relative z-10">
             {!activeGameId && !gameResult && (
-              /* No game started — Premium game selection */
-              <div className="flex-1 flex flex-col items-center justify-center gap-8 p-4 sm:p-6 animate-fade-in">
-                <div className="flex flex-col items-center justify-center gap-3 min-h-[100px]">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-faint">
+              /* No game started */
+              <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-4 sm:p-6 animate-fade-in">
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted">
                     <circle cx="12" cy="12" r="10" />
                     <polygon points="10 8 16 12 10 16 10 8" />
                   </svg>
-                  <p className="text-text-secondary text-lg font-medium tracking-wide">No game in progress</p>
+                  <p className="text-white text-lg font-medium tracking-wide">No game in progress</p>
                   {isOwner ? (
                     <p className="text-text-muted text-sm">Choose a game to start</p>
                   ) : (
@@ -426,20 +429,21 @@ export function Room() {
                       <button
                         key={game.value}
                         onClick={() => handleStartGame(game.value)}
-                        className="flex flex-col items-center justify-center w-40 h-40 bg-bg-elevated border border-border-subtle rounded-[2rem] hover:bg-bg-card hover:border-border-default hover:-translate-y-1 transition-all duration-300 cursor-pointer group shadow-lg"
+                        className="room-card w-40 h-40 flex flex-col items-center justify-center cursor-pointer group hover:shadow-[0_0_30px_rgba(56,189,248,0.3)] relative overflow-hidden border-white/5"
                       >
-                        <span className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">{game.icon}</span>
-                        <p className="text-white font-medium text-base group-hover:-translate-y-0.5 transition-transform duration-300">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-indigo-500/0 group-hover:from-indigo-500/10 group-hover:to-cyan-500/10 transition-all duration-500" />
+                        <span className="text-4xl mb-3 group-hover:scale-125 transition-transform duration-500 text-indigo-400 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-400 group-hover:to-cyan-400 drop-shadow-md relative z-10">{game.icon}</span>
+                        <p className="text-white font-semibold text-base group-hover:-translate-y-1 transition-transform duration-300 relative z-10">
                           {game.label}
                         </p>
-                        <p className="text-sm text-text-muted mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Start game</p>
+                        <p className="text-xs text-text-muted mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 relative z-10">Start match</p>
                       </button>
                     ))}
                   </div>
                 )}
 
                 {myRole === 'SPECTATOR' && (
-                  <p className="text-text-muted text-xs italic">
+                  <p className="text-text-muted text-xs italic mt-4">
                     You joined as a spectator
                   </p>
                 )}
@@ -452,44 +456,67 @@ export function Room() {
                 {renderGame()}
 
                 {gameResult && (
-                  <div className="mt-6 text-center">
-                    {gameResult.reason === 'disconnect_timeout' && (
-                      <p className="text-text-muted text-xs mt-1">Opponent disconnected</p>
-                    )}
-                    {isOwner && (
-                      <div className="mt-4 flex justify-center gap-3">
-                        <Button
-                          variant="outlined"
-                          onClick={() => {
-                            setActiveGameId(null);
-                            setActiveGameType(null);
-                            setGameState(null);
-                            setGamePlayers([]);
-                            setGameResult(null);
-                          }}
-                        >
-                          Change Game
-                        </Button>
-                        <Button
-                          variant="primary"
-                          onClick={() => {
-                            if (activeGameType) {
-                              handleStartGame(activeGameType);
-                            }
-                          }}
-                        >
-                          Play Again
-                        </Button>
+                  <div className="mt-8 flex justify-center w-full max-w-lg mx-auto">
+                    <div className="w-full bg-bg-surface border border-border-default rounded-xl p-8 relative overflow-hidden flex flex-col items-center">
+                      {/* Watermark */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">
+                        <span className="text-[80px] font-black text-[#A855F7]/10 transform -rotate-12 select-none tracking-tighter">
+                          {gameResult.result === 'win' ? 'WINNER' : 'DRAW'}
+                        </span>
                       </div>
-                    )}
+
+                      <div className="relative z-10 flex flex-col items-center">
+                        <h3 className="text-white text-[28px] font-semibold tracking-tight mb-6">
+                          {gameResult.result === 'win' && gameResult.winnerId
+                            ? `${gamePlayers.find(p => p.userId === gameResult.winnerId)?.user.displayName} wins!`
+                            : 'It\'s a Draw!'}
+                        </h3>
+
+                        {gameResult.reason === 'disconnect_timeout' && (
+                          <p className="text-status-error text-sm mb-4">Opponent disconnected</p>
+                        )}
+
+                        {isOwner && (
+                          <div className="flex justify-center gap-3 w-full">
+                            <Button
+                              variant="outlined"
+                              fullWidth
+                              onClick={() => {
+                                setActiveGameId(null);
+                                setActiveGameType(null);
+                                setGameState(null);
+                                setGamePlayers([]);
+                                setGameResult(null);
+                              }}
+                            >
+                              Back to Room
+                            </Button>
+                            <Button
+                              variant="primary"
+                              fullWidth
+                              onClick={() => {
+                                if (activeGameType) {
+                                  handleStartGame(activeGameType);
+                                }
+                              }}
+                            >
+                              Play Again
+                            </Button>
+                          </div>
+                        )}
+                        {!isOwner && (
+                          <p className="text-text-muted text-sm mt-4">Waiting for owner to restart...</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Chat panel */}
-          <div className="w-80 shrink-0 bg-bg-surface border-l border-border-subtle flex flex-col">
+          {/* Chat panel (Right) */}
+          <div className="w-96 shrink-0 border-l border-white/5 flex flex-col z-10 relative bg-gradient-to-b from-[#1B132B] to-[#231840]/50 backdrop-blur-sm">
             <ChatPanel roomId={roomId!} messages={messages} />
           </div>
         </div>

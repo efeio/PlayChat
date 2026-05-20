@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket';
 import { useAuth } from '../../hooks/useAuth';
 import { MessageBubble } from './MessageBubble';
+import { Button } from '../ui/Button';
 import type { Message } from '../../types/room.types';
 
 interface ChatPanelProps {
@@ -37,17 +38,17 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full chat-area w-full overflow-hidden">
       {/* Header */}
-      <div className="h-12 flex items-center px-4 border-b border-border-subtle shrink-0">
-        <span className="text-sm text-text-secondary font-medium tracking-wide">Chat</span>
+      <div className="h-14 flex items-center px-6 shrink-0 border-b border-white/5 bg-transparent">
+        <span className="text-sm font-semibold text-text-primary tracking-wide">Chat</span>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-faint">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             <p className="text-text-muted text-xs tracking-wide">
@@ -65,24 +66,25 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Floating pill input */}
-      <div className="p-3 shrink-0">
-        <div className="flex gap-2 items-center rounded-full bg-input-bg border border-input-border" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '6px', paddingBottom: '6px' }}>
+      {/* Input bar */}
+      <div className="p-4 shrink-0 border-t border-white/5 bg-[#1B132B]/50 backdrop-blur-md">
+        <div className="relative flex items-center">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            style={{ paddingTop: '6px', paddingBottom: '6px' }}
-            className="flex-1 bg-transparent text-white text-sm placeholder-text-muted focus:outline-none"
+            className="w-full bg-[#120A1F]/50 border border-white/5 rounded-full pl-5 pr-12 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all duration-200 backdrop-blur-md shadow-inner"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim()}
-            style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '6px', paddingBottom: '6px' }}
-            className="bg-white text-black font-semibold rounded-full text-sm hover:bg-neutral-200 active:scale-[0.98] transition-all duration-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-2 p-2 rounded-full text-text-muted hover:text-cyan-400 disabled:opacity-40 disabled:hover:text-text-muted transition-colors"
           >
-            Send
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
           </button>
         </div>
       </div>

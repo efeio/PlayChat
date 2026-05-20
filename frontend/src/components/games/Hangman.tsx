@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button } from '../ui/Button';
 
 const MAX_WRONG = 6;
 
@@ -61,7 +62,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
   }, [gameState.word, isFinished]);
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-6 w-full">
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
@@ -77,7 +78,7 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
         ) : (
           <p className="text-text-secondary text-sm">
             {wrongCount >= MAX_WRONG ? (
-              <span className="text-red-400 font-medium">You are out of guesses! Waiting for opponent...</span>
+              <span className="text-status-error font-medium">You are out of guesses! Waiting for opponent...</span>
             ) : (
               <span className="text-white font-medium">Guess the word before your opponent!</span>
             )}
@@ -87,15 +88,15 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
 
       {/* Opponent Status */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs w-full max-w-md justify-center">
-        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 bg-bg-elevated text-text-secondary border-border-subtle`}>
+        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 bg-[#1B132B]/80 text-text-secondary border-white/5 backdrop-blur-md`}>
           <span className="opacity-60">{getPlayerName(opponentId)}:</span>{' '}
           <span className="font-medium">{opponentRemaining} guesses left</span>
         </div>
       </div>
 
       {/* Hangman figure */}
-      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-bg-elevated rounded-2xl flex items-center justify-center border border-border-subtle">
-        <pre className="text-white text-center text-base sm:text-lg font-mono leading-tight select-none">
+      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-[#1B132B]/80 rounded-2xl flex items-center justify-center border border-white/5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+        <pre className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] text-center text-base sm:text-lg font-mono leading-tight select-none">
           {`  ┌───┐\n  │   ${wrongCount >= 1 ? 'O' : ' '}\n  │  ${wrongCount >= 3 ? '/' : ' '}${wrongCount >= 2 ? '|' : ' '}${wrongCount >= 4 ? '\\' : ' '}\n  │  ${wrongCount >= 5 ? '/' : ' '} ${wrongCount >= 6 ? '\\' : ' '}\n──┴──`}
         </pre>
       </div>
@@ -125,10 +126,10 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
                   disabled={used}
                   className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 cursor-pointer disabled:cursor-default border ${
                     isCorrect
-                      ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
+                      ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.3)]'
                       : isWrong
-                      ? 'bg-bg-base text-text-faint border-border-subtle'
-                      : 'bg-bg-elevated text-white border-border-subtle hover:bg-bg-card hover:border-border-default'
+                      ? 'bg-black/20 text-text-muted border-white/5 opacity-50'
+                      : 'bg-[#1B132B]/80 text-white border-white/5 hover:border-cyan-500/30 hover:bg-[#1B132B] shadow-inner backdrop-blur-md'
                   }`}
                 >
                   {letter}
@@ -138,23 +139,20 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
           </div>
 
           {/* Word guess input */}
-          <div className="flex gap-2 w-full max-w-xs" style={{ paddingLeft: '16px', paddingRight: '16px' }}>
+          <div className="flex gap-2 w-full max-w-xs items-center mt-2">
             <input
               value={wordGuess}
               onChange={(e) => setWordGuess(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleWordGuess()}
               placeholder="Guess the word..."
-              style={{ height: '44px', paddingLeft: '16px', paddingRight: '16px' }}
-              className="flex-1 rounded-full bg-input-bg border border-input-border text-white placeholder-text-muted text-sm focus:border-input-focus focus:ring-1 focus:ring-input-focus focus:outline-none transition-all duration-200"
+              className="flex-1 bg-[#120A1F]/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all duration-200 backdrop-blur-md shadow-inner"
             />
-            <button
+            <Button
               onClick={handleWordGuess}
               disabled={!wordGuess.trim()}
-              style={{ height: '44px', paddingLeft: '20px', paddingRight: '20px' }}
-              className="rounded-full bg-white text-black text-sm font-semibold hover:bg-neutral-200 active:scale-[0.98] disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all duration-200"
             >
               Guess
-            </button>
+            </Button>
           </div>
         </>
       )}
