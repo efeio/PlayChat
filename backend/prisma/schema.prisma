@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -7,109 +7,197 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  displayName  String
-  email        String   @unique
-  passwordHash String
-  avatarUrl    String?
-  provider     String   @default("LOCAL")
-  isOnline     Boolean  @default(false)
-  lastSeen     DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// ─── Enums ───────────────────────────────────────────────────────────────────
 
-  roomMembers  RoomMember[]
-  messages     Message[]
-  gamePlayers  GamePlayer[]
-  stats        UserStats?
-  notifications Notification[]
+enum RoomType {
+  PUBLIC
+  PRIVATE
+}
+
+enum MemberRole {
+  OWNER
+  MEMBER
+  SPECTATOR
+}
+
+enum GameType {
+  GENERAL
+  TIC_TAC_TOE
+  MEMORY_CARDS
+  CONNECT_FOUR
+  WORDLE
+  ROCK_PAPER_SCISSORS
+  NUMBER_GUESS
+  HANGMAN
+}
+
+enum GameStatus {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+}
+
+enum PlayerRole {
+  PLAYER
+  SPECTATOR
+}
+
+enum MessageType {
+  CHAT
+  GAME_LOG
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  googleId      String?   @unique
+  username      String    @unique
+  displayName   String
+  avatarUrl     String?
+  isVerified    Boolean   @default(false)
+  currentRoomId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  currentRoom        Room?          @relation("UserCurrentRoom", fields: [currentRoomId], references: [id], onDelete: SetNull)
+  createdRooms       Room[]         @relation("RoomCreator")
+  roomMembers        RoomMember[]
+  messages           Message[]
+  gamePlayers        GamePlayer[]
+  stats              UserStats[]
+  sentNotifications  Notification[] @relation("NotificationSender")
+  notifications      Notification[] @relation("NotificationReceiver")
+  wonGames           Game[]         @relation("GameWinner")
+
+  emailVerifyToken       String?
+  emailVerifyExpires     DateTime?
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
+
+  @@map("users")
 }
 
 model Room {
-  id          String   @id @default(cuid())
-  name        String
-  type        String   @default("PUBLIC")
-  maxMembers  Int      @default(10)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  type          RoomType @default(PUBLIC)
+  passwordHash  String?
+  maxMembers    Int      @default(10)
+  isActive      Boolean  @default(true)
+  creatorId     String
+  currentGameId String?  @unique
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creator     User          @relation("RoomCreator", fields: [creatorId], references: [id])
+  currentGame Game?         @relation("RoomCurrentGame", fields: [currentGameId], references: [id], onDelete: SetNull)
   members     RoomMember[]
   messages    Message[]
-  games       Game[]
+  games       Game[]        @relation("RoomGames")
+  usersHere   User[]        @relation("UserCurrentRoom")
+  notifications Notification[]
+
+  @@map("rooms")
 }
 
 model RoomMember {
-  id        String   @id @default(cuid())
-  userId    String
-  roomId    String
-  role      String   @default("MEMBER")
-  joinedAt  DateTime @default(now())
+  id       String     @id @default(cuid())
+  roomId   String
+  userId   String
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, roomId])
+  @@unique([roomId, userId])
+  @@map("room_members")
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  content   String
-  type      String   @default("CHAT")
-  userId    String
+  id        String      @id @default(cuid())
   roomId    String
-  createdAt DateTime @default(now())
+  userId    String?
+  content   String
+  type      MessageType @default(CHAT)
+  createdAt DateTime    @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([roomId, createdAt])
+  @@map("messages")
 }
 
 model Game {
-  id         String   @id @default(cuid())
-  roomId     String
-  gameType   String
-  status     String   @default("WAITING")
-  state      String   @default("{}")
-  winnerId   String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String     @id @default(cuid())
+  roomId    String
+  type      GameType
+  status    GameStatus @default(WAITING)
+  state     Json       @default("{}")
+  winnerId  String?
+  startedAt DateTime?
+  finishedAt DateTime?
+  lastMoveAt DateTime?
+  createdAt DateTime   @default(now())
 
-  room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room       Room         @relation("RoomGames", fields: [roomId], references: [id], onDelete: Cascade)
+  winner     User?        @relation("GameWinner", fields: [winnerId], references: [id], onDelete: SetNull)
   players    GamePlayer[]
+  currentRoom Room?       @relation("RoomCurrentGame")
+
+  @@index([roomId, status])
+  @@map("games")
 }
 
 model GamePlayer {
-  id       String @id @default(cuid())
-  gameId   String
-  userId   String
-  role     String @default("PLAYER")
-  playerIndex Int @default(0)
+  id     String     @id @default(cuid())
+  gameId String
+  userId String
+  role   PlayerRole @default(PLAYER)
+  symbol String?
 
-  game     Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  user     User   @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([gameId, userId])
+  @@map("game_players")
 }
 
 model UserStats {
-  id          String @id @default(cuid())
-  userId      String @unique
-  gamesPlayed Int    @default(0)
-  gamesWon    Int    @default(0)
-  gamesLost   Int    @default(0)
-  gamesDraw   Int    @default(0)
+  id          String   @id @default(cuid())
+  userId      String
+  gameType    GameType @default(GENERAL)
+  gamesPlayed Int      @default(0)
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  draws       Int      @default(0)
+  roomsJoined Int      @default(0)
 
-  user        User   @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameType])
+  @@map("user_stats")
 }
 
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  type      String
-  content   String
+  senderId  String
+  roomId    String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user   User @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  sender User @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
 }

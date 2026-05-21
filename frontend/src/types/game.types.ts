@@ -1,4 +1,4 @@
-export type GameType = 'TIC_TAC_TOE' | 'CONNECT_FOUR' | 'ROCK_PAPER_SCISSORS' | 'HANGMAN';
+export type GameType = 'TIC_TAC_TOE' | 'CONNECT_FOUR' | 'ROCK_PAPER_SCISSORS' | 'HANGMAN' | 'WORDLE' | 'MEMORY_CARDS' | 'NUMBER_GUESS';
 
 export interface GamePlayer {
   id: string;

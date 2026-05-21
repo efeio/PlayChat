@@ -21,13 +21,13 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
   const getTypeStyles = () => {
     switch (type) {
       case 'error':
-        return 'border-red-500/30 bg-red-950 text-red-400';
+        return 'border-status-error/20 bg-status-error/10 text-red-300';
       case 'success':
-        return 'border-emerald-500/30 bg-emerald-950 text-emerald-400';
+        return 'border-status-success/20 bg-status-success/10 text-emerald-300';
       case 'warning':
-        return 'border-amber-500/30 bg-amber-950 text-amber-400';
+        return 'border-accent-warm/20 bg-accent-warm/10 text-amber-300';
       default:
-        return 'border-border-default bg-bg-elevated text-white';
+        return 'border-accent-primary/20 bg-accent-primary/10 text-indigo-200';
     }
   };
 
@@ -73,11 +73,10 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
       onClick={() => onDismiss(id)}
       role="alert"
       aria-live="polite"
-      className={`flex items-start gap-3 rounded-2xl border backdrop-blur-xl ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[320px] max-w-md shadow-2xl`}
-      style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '14px', paddingBottom: '14px' }}
+      className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border backdrop-blur-xl ${getTypeStyles()} animate-slide-in cursor-pointer min-w-[300px] max-w-md shadow-2xl shadow-black/30`}
     >
-      <div className="shrink-0 mt-0.5">{getIcon()}</div>
-      <p className="text-sm flex-1 leading-snug">{message}</p>
+      <div className="shrink-0">{getIcon()}</div>
+      <p className="text-sm flex-1 leading-snug font-medium">{message}</p>
       <button
         onClick={(e) => {
           e.stopPropagation();

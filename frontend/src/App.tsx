@@ -5,7 +5,11 @@ import { ToastProvider } from './context/ToastContext';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import { Explore } from './pages/Explore';
+import { CreateRoom } from './pages/CreateRoom';
 import { Room } from './pages/Room';
+import { OAuthCallback } from './pages/OAuthCallback';
+import { Profile } from './pages/Profile';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -16,7 +20,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-bg-base">
         <div className="flex flex-col items-center gap-3">
           <div className="w-6 h-6 border-2 border-border-default border-t-white rounded-full animate-spin" />
-          <p className="text-text-muted text-sm">Loading...</p>
+          <p className="text-text-muted text-sm">Yükleniyor...</p>
         </div>
       </div>
     );
@@ -37,7 +41,7 @@ function PublicRoute({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-bg-base">
         <div className="flex flex-col items-center gap-3">
           <div className="w-6 h-6 border-2 border-border-default border-t-white rounded-full animate-spin" />
-          <p className="text-text-muted text-sm">Loading...</p>
+          <p className="text-text-muted text-sm">Yükleniyor...</p>
         </div>
       </div>
     );
@@ -78,6 +82,22 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/explore"
+        element={
+          <ProtectedRoute>
+            <Explore />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-room"
+        element={
+          <ProtectedRoute>
+            <CreateRoom />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/room/:id"
         element={
           <ProtectedRoute>
@@ -85,6 +105,23 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:id"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

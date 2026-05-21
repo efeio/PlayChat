@@ -12,6 +12,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, displayName: string, email: string, password: string) => Promise<void>;
+  loginWithToken: (token: string) => void;
   logout: () => void;
   error: string | null;
   clearError: () => void;
@@ -75,6 +76,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loginWithToken = useCallback((jwt: string) => {
+    localStorage.setItem(TOKEN_KEY, jwt);
+    setToken(jwt);
+    try {
+      const payload = JSON.parse(atob(jwt.split('.')[1]));
+      const userData: User = {
+        id: payload.userId,
+        username: payload.username || '',
+        displayName: payload.displayName || payload.username || '',
+        email: payload.email || '',
+      };
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      setUser(userData);
+    } catch {
+      setToken(jwt);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -93,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         register,
+        loginWithToken,
         logout,
         error,
         clearError,

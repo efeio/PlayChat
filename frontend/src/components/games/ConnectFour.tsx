@@ -42,55 +42,53 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-white font-semibold text-lg">
-            {winner ? `${getPlayerName(winner)} wins!` : 'Draw!'}
+          <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
+            {winner ? `${getPlayerName(winner)} kazandı!` : 'Berabere!'}
           </p>
         ) : (
           <p className="text-text-secondary text-sm">
             {isMyTurn ? (
-              <span className="text-accent-yellow font-medium">Your turn — drop a piece</span>
+              <span className="text-accent-secondary font-semibold">Sıra sende — taş bırak</span>
             ) : (
-              `Waiting for ${getPlayerName(currentTurnPlayer)}...`
+              `${getPlayerName(currentTurnPlayer)} bekleniyor...`
             )}
           </p>
         )}
       </div>
 
       {/* Players */}
-      <div className="flex gap-6">
+      <div className="flex gap-4">
         {gameState.players.map((pid, i) => (
           <div
             key={pid}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all duration-200 ${
+            className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
               currentPlayerIndex === i && !isFinished
-                ? 'bg-[#1B132B]/80 border border-white/10 backdrop-blur-md shadow-md'
+                ? 'bg-bg-card border border-accent-primary/20 shadow-lg shadow-accent-primary/5'
                 : 'text-text-secondary border border-transparent'
             }`}
           >
-            <div
-              className={`w-4 h-4 rounded-full shadow-sm ${
-                i === 0
-                  ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]'
-                  : 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]'
-              }`}
-            />
-            <span className={currentPlayerIndex === i && !isFinished ? 'text-white' : ''}>{getPlayerName(pid)}</span>
+            <div className={`w-4 h-4 rounded-full ${
+              i === 0 ? 'game-piece-1' : 'game-piece-2'
+            }`} />
+            <span className={currentPlayerIndex === i && !isFinished ? 'text-white font-medium' : ''}>
+              {getPlayerName(pid)}
+            </span>
           </div>
         ))}
       </div>
 
       {/* Board */}
-      <div className="bg-[#1B132B]/80 rounded-2xl backdrop-blur-xl p-3 sm:p-4 max-w-full overflow-x-auto border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-        {/* Column headers (clickable) */}
-        <div className="grid gap-1 sm:gap-1.5" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+      <div className="game-board p-3 sm:p-4 max-w-full overflow-x-auto">
+        {/* Column headers */}
+        <div className="grid gap-1.5 sm:gap-2 mb-1" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
           {Array.from({ length: COLS }).map((_, col) => (
             <button
               key={`hdr-${col}`}
               onClick={() => handleColumnClick(col)}
               disabled={isFinished || !isMyTurn || board[0][col] !== 0}
-              className="h-6 sm:h-8 flex items-center justify-center text-text-faint hover:text-white transition-all duration-200 cursor-pointer disabled:cursor-default"
+              className="h-7 flex items-center justify-center text-text-muted hover:text-accent-secondary transition-all duration-200 cursor-pointer disabled:cursor-default disabled:opacity-30"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-4 sm:h-4">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12l7 7 7-7" />
               </svg>
             </button>
@@ -101,7 +99,7 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
         {Array.from({ length: ROWS }).map((_, row) => (
           <div
             key={row}
-            className="grid gap-1 sm:gap-1.5 mt-1 sm:mt-1.5"
+            className="grid gap-1.5 sm:gap-2 mt-1.5 sm:mt-2"
             style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}
           >
             {Array.from({ length: COLS }).map((_, col) => {
@@ -111,16 +109,12 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
                   key={`${row}-${col}`}
                   onClick={() => handleColumnClick(col)}
                   disabled={isFinished || !isMyTurn || board[0][col] !== 0}
-                  className="w-11 h-11 sm:w-14 sm:h-14 bg-[#120A1F]/50 rounded-full flex items-center justify-center border border-white/5 shadow-inner disabled:cursor-default hover:bg-white/5 transition-colors"
+                  className="game-cell w-10 h-10 sm:w-12 sm:h-12 !rounded-full flex items-center justify-center disabled:cursor-default"
                 >
                   {cell !== 0 && (
-                    <div
-                      className={`w-8 h-8 sm:w-11 sm:h-11 rounded-full transition-all duration-300 ${
-                        cell === 1
-                          ? 'bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)] scale-100'
-                          : 'bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] scale-100'
-                      }`}
-                    />
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all duration-300 scale-100 ${
+                      cell === 1 ? 'game-piece-1' : 'game-piece-2'
+                    }`} />
                   )}
                 </button>
               );

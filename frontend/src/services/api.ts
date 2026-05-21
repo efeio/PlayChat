@@ -40,4 +40,11 @@ export const api = {
       body: JSON.stringify(body),
       token,
     }),
+
+  put: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, {
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+      token,
+    }),
 };

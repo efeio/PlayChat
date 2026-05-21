@@ -1,25 +1,25 @@
 export function SkeletonLoader({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-bg-surface border border-border-default rounded-2xl animate-pulse ${className}`} />
+    <div className={`bg-bg-card border border-border-subtle rounded-xl animate-pulse ${className}`} />
   );
 }
 
 export function RoomCardSkeleton() {
   return (
-    <div className="bg-bg-surface border border-border-default rounded-xl p-6 min-h-[220px] flex flex-col justify-between">
+    <div className="bg-bg-surface border border-border-default rounded-2xl p-6 min-h-[240px] flex flex-col justify-between">
       <div>
-        <div className="flex items-start justify-between mb-5">
-          <SkeletonLoader className="h-6 w-36" />
-          <SkeletonLoader className="h-5 w-16 rounded-full" />
+        <div className="flex items-start justify-between mb-4">
+          <SkeletonLoader className="h-5 w-32" />
+          <SkeletonLoader className="h-5 w-14 !rounded-full" />
         </div>
-        <SkeletonLoader className="h-4 w-28 mb-8" />
-        <div className="flex -space-x-2 mb-8">
+        <SkeletonLoader className="h-3 w-20 mb-6" />
+        <div className="flex -space-x-2 mb-6">
           {[1, 2, 3].map((i) => (
-            <SkeletonLoader key={i} className="w-8 h-8 rounded-full" />
+            <SkeletonLoader key={i} className="w-8 h-8 !rounded-full ring-2 ring-bg-surface" />
           ))}
         </div>
       </div>
-      <SkeletonLoader className="h-11 w-full rounded-lg" />
+      <SkeletonLoader className="h-11 w-full" />
     </div>
   );
 }
@@ -29,9 +29,9 @@ export function MemberListSkeleton() {
     <div className="space-y-2">
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-3 px-3 py-2">
-          <SkeletonLoader className="w-8 h-8 rounded-full" />
+          <SkeletonLoader className="w-8 h-8 !rounded-full" />
           <div className="flex-1">
-            <SkeletonLoader className="h-4 w-24 mb-1" />
+            <SkeletonLoader className="h-3.5 w-24 mb-1.5" />
             <SkeletonLoader className="h-3 w-16" />
           </div>
         </div>
@@ -43,10 +43,15 @@ export function MemberListSkeleton() {
 export function GameAreaSkeleton() {
   return (
     <div className="flex-1 flex items-center justify-center p-6">
-      <div className="flex flex-col items-center gap-4">
-        <SkeletonLoader className="w-64 h-64 rounded-3xl" />
-        <SkeletonLoader className="h-5 w-48 rounded-full" />
-        <SkeletonLoader className="h-4 w-32 rounded-full" />
+      <div className="flex flex-col items-center gap-5">
+        <SkeletonLoader className="w-16 h-16 !rounded-2xl" />
+        <SkeletonLoader className="h-4 w-40" />
+        <SkeletonLoader className="h-3 w-28" />
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonLoader key={i} className="w-28 h-28 !rounded-2xl" />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -2,9 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Server, Socket } from 'socket.io';
 import { registerRoomHandlers } from './room.handler.js';
 import prisma from '../../config/prisma.js';
-import { activeGames } from './game.handler.js';
+import { getActiveGame } from '../../services/gameState.service.js';
 
-/* Mock Prisma */
 vi.mock('../../config/prisma.js', () => ({
   default: {
     roomMember: {
@@ -19,9 +18,19 @@ vi.mock('../../config/prisma.js', () => ({
   },
 }));
 
-/* Mock game handler activeGames */
+vi.mock('../../services/gameState.service.js', () => ({
+  getActiveGame: vi.fn(),
+}));
+
 vi.mock('./game.handler.js', () => ({
-  activeGames: new Map(),
+  handlePlayerLeftRoom: vi.fn(),
+}));
+
+vi.mock('../authorizationGuard.js', () => ({
+  trackSocketRoom: vi.fn(),
+  untrackSocketRoom: vi.fn(),
+  getSocketRoom: vi.fn(),
+  sanitizeString: vi.fn((s: string) => s?.trim()),
 }));
 
 describe('room:get_state handler', () => {
@@ -30,9 +39,7 @@ describe('room:get_state handler', () => {
   let roomGetStateHandler: (data: { roomId: string }, callback?: (res: any) => void) => void;
 
   beforeEach(() => {
-    /* Reset mocks */
     vi.clearAllMocks();
-    (activeGames as Map<string, any>).clear();
 
     /* Create mock socket */
     mockSocket = {
@@ -44,7 +51,8 @@ describe('room:get_state handler', () => {
         if (event === 'room:get_state') {
           roomGetStateHandler = handler;
         }
-      }),
+        return mockSocket;
+      }) as any,
       emit: vi.fn(),
       to: vi.fn(() => mockSocket as any),
       join: vi.fn(),
@@ -301,11 +309,13 @@ describe('room:get_state handler', () => {
     vi.mocked(prisma.room.findUnique).mockResolvedValue(mockRoom as any);
     vi.mocked(prisma.game.findFirst).mockResolvedValue(mockGameRecord as any);
 
-    /* Add game to memory */
-    (activeGames as Map<string, any>).set(gameId, {
-      engine: {},
+    vi.mocked(getActiveGame).mockReturnValue({
+      engine: {} as any,
       state: mockGameState,
       gameId,
+      roomId,
+      gameType: 'TIC_TAC_TOE',
+      lastUpdated: Date.now(),
     });
 
     (mockIo.in as any).mockReturnValue({
@@ -384,8 +394,7 @@ describe('room:get_state handler', () => {
     vi.mocked(prisma.room.findUnique).mockResolvedValue(mockRoom as any);
     vi.mocked(prisma.game.findFirst).mockResolvedValue(mockGameRecord as any);
 
-    /* Game is NOT in memory (simulating server restart) */
-    expect((activeGames as Map<string, any>).has(gameId)).toBe(false);
+    vi.mocked(getActiveGame).mockReturnValue(undefined);
 
     (mockIo.in as any).mockReturnValue({
       fetchSockets: vi.fn().mockResolvedValue([]),

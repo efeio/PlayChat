@@ -64,13 +64,13 @@ describe('TicTacToe Mobile Responsiveness', () => {
       />
     );
 
-    const cells = container.querySelectorAll('button');
-    cells.forEach((cell) => {
-      const classes = cell.className;
-      // Should have mobile text size (text-2xl)
-      expect(classes).toContain('text-2xl');
-      // Should have desktop text size (sm:text-3xl)
-      expect(classes).toContain('sm:text-3xl');
+    // Text is on the span inside cells, not the cell buttons themselves
+    const spans = container.querySelectorAll('button span');
+    const filledSpans = Array.from(spans).filter(s => s.textContent);
+    filledSpans.forEach((span) => {
+      const classes = span.className;
+      expect(classes).toContain('text-3xl');
+      expect(classes).toContain('sm:text-4xl');
     });
   });
 
@@ -87,10 +87,8 @@ describe('TicTacToe Mobile Responsiveness', () => {
     const grid = container.querySelector('.grid-cols-3');
     expect(grid).toBeInTheDocument();
     const classes = grid?.className || '';
-    // Should have mobile gap (gap-1)
-    expect(classes).toContain('gap-1');
-    // Should have desktop gap (sm:gap-1.5)
-    expect(classes).toContain('sm:gap-1.5');
+    expect(classes).toContain('gap-2.5');
+    expect(classes).toContain('sm:gap-3');
   });
 
   it('should allow clicking on empty cells when it is user turn', () => {

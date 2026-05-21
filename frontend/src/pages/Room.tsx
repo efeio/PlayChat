@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
 import { useToast } from '../context/ToastContext';
@@ -12,6 +12,11 @@ import { TicTacToe } from '../components/games/TicTacToe';
 import { ConnectFour } from '../components/games/ConnectFour';
 import { RockPaperScissors } from '../components/games/RockPaperScissors';
 import { Hangman } from '../components/games/Hangman';
+import { Wordle } from '../components/games/Wordle';
+import { MemoryCards } from '../components/games/MemoryCards';
+import { NumberGuess } from '../components/games/NumberGuess';
+import { GameResult } from '../components/games/GameResult';
+import { GAME_ICONS } from '../components/games/GameIcons';
 import type { Room as RoomType, Message, RoomMember } from '../types/room.types';
 import type { GameType, GameStartedEvent, GameStateEvent, GameEndEvent, GamePlayer } from '../types/game.types';
 
@@ -54,15 +59,19 @@ interface RoomStateResponse {
   userRole: 'OWNER' | 'MEMBER' | 'SPECTATOR';
 }
 
-const GAME_TYPES: { value: GameType; label: string; icon: string }[] = [
-  { value: 'TIC_TAC_TOE', label: 'Tic-Tac-Toe', icon: '⊞' },
-  { value: 'CONNECT_FOUR', label: 'Connect Four', icon: '◉' },
-  { value: 'ROCK_PAPER_SCISSORS', label: 'Rock Paper Scissors', icon: '✊' },
-  { value: 'HANGMAN', label: 'Hangman', icon: '✎' },
+const GAME_TYPES: { value: GameType; label: string; color: string }[] = [
+  { value: 'TIC_TAC_TOE', label: 'XOX', color: 'from-indigo-500 to-purple-500' },
+  { value: 'CONNECT_FOUR', label: 'Dörtlü Bağla', color: 'from-cyan-500 to-blue-500' },
+  { value: 'ROCK_PAPER_SCISSORS', label: 'Taş Kağıt Makas', color: 'from-amber-500 to-orange-500' },
+  { value: 'HANGMAN', label: 'Adam Asmaca', color: 'from-emerald-500 to-teal-500' },
+  { value: 'WORDLE', label: 'Wordle', color: 'from-lime-500 to-green-500' },
+  { value: 'MEMORY_CARDS', label: 'Hafıza Kartları', color: 'from-pink-500 to-rose-500' },
+  { value: 'NUMBER_GUESS', label: 'Sayı Tahmin', color: 'from-violet-500 to-fuchsia-500' },
 ];
 
 export function Room() {
   const { id: roomId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const { socket, isAuthenticated } = useSocket();
@@ -96,11 +105,11 @@ export function Room() {
 
     setIsLoadingState(true);
     setStateRecoveryError(null);
-    
+
     const timeoutId = setTimeout(() => {
       setIsLoadingState(false);
-      setStateRecoveryError('Failed to load room state - timeout');
-      addToast('error', 'Failed to load room state - timeout');
+      setStateRecoveryError('Oda durumu yüklenemedi - zaman aşımı');
+      addToast('error', 'Oda durumu yüklenemedi - zaman aşımı');
     }, 5000);
 
     socket.emit('room:get_state', { roomId }, (res: RoomStateResponse | { error: string }) => {
@@ -110,19 +119,16 @@ export function Room() {
       if ('error' in res) {
         setStateRecoveryError(res.error);
         addToast('error', res.error);
-        
-        // Redirect to dashboard for unrecoverable errors
+
         if (res.error === 'Room not found' || res.error === 'Not a member of this room') {
           navigate('/dashboard');
         }
         return;
       }
 
-      // Clear error on successful recovery
       setStateRecoveryError(null);
-
       setRoom(res.room as RoomType);
-      
+
       const transformedMembers: RoomMember[] = res.members.map((m) => ({
         id: `${m.userId}-${res.room.id}`,
         userId: m.userId,
@@ -156,7 +162,7 @@ export function Room() {
         setActiveGameId(res.activeGame.gameId);
         setActiveGameType(res.activeGame.gameType as GameType);
         setGameState(res.activeGame.state as Record<string, unknown>);
-        
+
         const transformedPlayers: GamePlayer[] = res.activeGame.players.map((p) => ({
           id: `${p.userId}-${res.activeGame!.gameId}`,
           gameId: res.activeGame!.gameId,
@@ -185,7 +191,8 @@ export function Room() {
   useEffect(() => {
     if (!socket || !isAuthenticated || !roomId) return;
 
-    socket.emit('room:join', { roomId }, (res: { error?: string }) => {
+    const password = searchParams.get('password') || undefined;
+    socket.emit('room:join', { roomId, password }, (res: { error?: string }) => {
       if (res?.error) {
         addToast('error', res.error);
       } else {
@@ -235,7 +242,7 @@ export function Room() {
       if (data.state) {
         setGameState(data.state);
       }
-      
+
       if (data.result === 'draw') {
         addToast('info', 'Game ended in a draw!');
       } else if (data.winnerId) {
@@ -254,7 +261,7 @@ export function Room() {
           return currentPlayers;
         });
       }
-      
+
       if (data.reason === 'disconnect_timeout') {
         addToast('warning', 'Opponent disconnected - game ended');
       } else if (data.reason === 'player_left') {
@@ -301,8 +308,6 @@ export function Room() {
   const handleMove = useCallback((move: Record<string, unknown>) => {
     if (!socket || !roomId || !activeGameId) return;
     socket.emit('game:move', { gameId: activeGameId, roomId, move }, (res: { error?: string }) => {
-      // Display error toast for any game move errors, including role-based errors
-      // (e.g., "Only the Word Guesser can guess letters" for Hangman)
       if (res?.error) addToast('error', res.error);
     });
   }, [socket, roomId, activeGameId, addToast]);
@@ -335,6 +340,12 @@ export function Room() {
         return <RockPaperScissors gameState={gameState as Parameters<typeof RockPaperScissors>[0]['gameState']} {...commonProps} />;
       case 'HANGMAN':
         return <Hangman gameState={gameState as Parameters<typeof Hangman>[0]['gameState']} {...commonProps} />;
+      case 'WORDLE':
+        return <Wordle gameState={gameState as Parameters<typeof Wordle>[0]['gameState']} {...commonProps} />;
+      case 'MEMORY_CARDS':
+        return <MemoryCards gameState={gameState as Parameters<typeof MemoryCards>[0]['gameState']} {...commonProps} />;
+      case 'NUMBER_GUESS':
+        return <NumberGuess gameState={gameState as Parameters<typeof NumberGuess>[0]['gameState']} {...commonProps} />;
       default:
         return null;
     }
@@ -347,10 +358,16 @@ export function Room() {
         <div className="flex-1 flex items-center justify-center">
           {stateRecoveryError ? (
             <div className="text-center animate-fade-in">
-              <p className="text-white text-sm mb-4">Failed to load room state</p>
+              <div className="w-16 h-16 rounded-2xl bg-status-error/10 border border-status-error/20 flex items-center justify-center mx-auto mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-status-error">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M15 9l-6 6M9 9l6 6" />
+                </svg>
+              </div>
+              <p className="text-white text-sm font-medium mb-2">Oda yüklenemedi</p>
               <p className="text-text-muted text-xs mb-6">{stateRecoveryError}</p>
               <Button variant="outlined" onClick={recoverState}>
-                Retry
+                Tekrar dene
               </Button>
             </div>
           ) : (
@@ -368,37 +385,43 @@ export function Room() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Room header */}
-        <div className="h-14 flex items-center justify-between px-6 border-b border-border-default bg-bg-surface shrink-0">
+        <div className="h-14 flex items-center justify-between px-6 border-b border-border-default bg-bg-surface/60 backdrop-blur-md shrink-0 z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-text-muted hover:text-white transition-colors duration-200 cursor-pointer"
+              className="p-2 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-all duration-200 cursor-pointer"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
+            <div className="w-px h-6 bg-border-default" />
             <div>
               <h2 className="text-white font-semibold text-sm">{room.name}</h2>
-              <p className="text-text-muted text-xs">{members.length} members</p>
+              <p className="text-text-muted text-[11px]">{members.length} oyuncu odada</p>
             </div>
           </div>
 
           {/* Online members */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="flex -space-x-1.5">
               {members.slice(0, 4).map((m) => (
                 <div
                   key={m.id}
-                  className="w-6 h-6 rounded-full bg-bg-surface border border-bg-elevated flex items-center justify-center text-[9px] text-text-secondary font-medium relative"
+                  className="w-7 h-7 rounded-full bg-gradient-to-br from-accent-primary/80 to-accent-secondary/80 ring-2 ring-bg-surface flex items-center justify-center text-[9px] text-white font-bold relative"
                   title={m.user.displayName}
                 >
                   {m.user.displayName.charAt(0).toUpperCase()}
                   {m.isOnline && (
-                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-status-online border border-bg-surface"></span>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-status-online border-2 border-bg-surface"></span>
                   )}
                 </div>
               ))}
+              {members.length > 4 && (
+                <div className="w-7 h-7 rounded-full bg-bg-elevated ring-2 ring-bg-surface flex items-center justify-center text-[9px] text-text-muted font-bold">
+                  +{members.length - 4}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -406,117 +429,96 @@ export function Room() {
         {/* Game + Chat split */}
         <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
           {/* Game area (Center) */}
-          <div className="flex-1 flex flex-col items-center justify-center min-w-0 overflow-hidden game-panel relative z-10">
+          <div className="flex-1 flex flex-col items-center justify-center min-w-0 overflow-hidden relative z-10">
             {!activeGameId && !gameResult && (
-              /* No game started */
-              <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-4 sm:p-6 animate-fade-in">
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted">
-                    <circle cx="12" cy="12" r="10" />
-                    <polygon points="10 8 16 12 10 16 10 8" />
-                  </svg>
-                  <p className="text-white text-lg font-medium tracking-wide">No game in progress</p>
-                  {isOwner ? (
-                    <p className="text-text-muted text-sm">Choose a game to start</p>
-                  ) : (
-                    <p className="text-text-muted text-sm">Waiting for the room owner to start a game</p>
-                  )}
+              <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-6 sm:p-8 animate-fade-in">
+                {/* No game state */}
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-bg-card border border-border-default flex items-center justify-center animate-float">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#playGrad)" strokeWidth="1.5">
+                      <defs>
+                        <linearGradient id="playGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#6366f1" />
+                          <stop offset="100%" stopColor="#22d3ee" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="12" cy="12" r="10" />
+                      <polygon points="10 8 16 12 10 16 10 8" />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white text-lg font-semibold" style={{ fontFamily: 'var(--font-family-display)' }}>
+                      {isOwner ? 'Oyun seç' : 'Oyun bekleniyor'}
+                    </p>
+                    <p className="text-text-muted text-sm mt-1">
+                      {isOwner ? 'Maç başlatmak için aşağıdan bir oyun seç' : 'Oda sahibi kısa süre içinde oyun başlatacak'}
+                    </p>
+                  </div>
                 </div>
 
                 {isOwner && (
-                  <div className="flex flex-wrap items-center justify-center gap-6 max-w-3xl mx-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto w-full px-4">
                     {GAME_TYPES.map((game) => (
                       <button
                         key={game.value}
                         onClick={() => handleStartGame(game.value)}
-                        className="room-card w-40 h-40 flex flex-col items-center justify-center cursor-pointer group hover:shadow-[0_0_30px_rgba(56,189,248,0.3)] relative overflow-hidden border-white/5"
+                        className="relative group cursor-pointer rounded-2xl border border-border-default bg-bg-card/80 hover:bg-bg-elevated p-6 flex flex-col items-center justify-center gap-4 min-h-[160px] transition-all duration-300 hover:border-accent-primary/30 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)]"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-indigo-500/0 group-hover:from-indigo-500/10 group-hover:to-cyan-500/10 transition-all duration-500" />
-                        <span className="text-4xl mb-3 group-hover:scale-125 transition-transform duration-500 text-indigo-400 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-400 group-hover:to-cyan-400 drop-shadow-md relative z-10">{game.icon}</span>
-                        <p className="text-white font-semibold text-base group-hover:-translate-y-1 transition-transform duration-300 relative z-10">
-                          {game.label}
-                        </p>
-                        <p className="text-xs text-text-muted mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 relative z-10">Start match</p>
+                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center text-white group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
+                          {GAME_ICONS[game.value]}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-white font-semibold text-sm group-hover:text-accent-secondary transition-colors">
+                            {game.label}
+                          </p>
+                          <p className="text-text-muted text-[10px] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            Başlat
+                          </p>
+                        </div>
                       </button>
                     ))}
                   </div>
                 )}
 
                 {myRole === 'SPECTATOR' && (
-                  <p className="text-text-muted text-xs italic mt-4">
-                    You joined as a spectator
-                  </p>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-warm/10 border border-accent-warm/20">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent-warm">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                    <p className="text-accent-warm text-xs font-medium">Spectating</p>
+                  </div>
                 )}
               </div>
             )}
 
             {(activeGameId || gameResult) && (
-              /* Active game or finished game */
               <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in">
                 {renderGame()}
 
-                {gameResult && (
-                  <div className="mt-8 flex justify-center w-full max-w-lg mx-auto">
-                    <div className="w-full bg-bg-surface border border-border-default rounded-xl p-8 relative overflow-hidden flex flex-col items-center">
-                      {/* Watermark */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">
-                        <span className="text-[80px] font-black text-[#A855F7]/10 transform -rotate-12 select-none tracking-tighter">
-                          {gameResult.result === 'win' ? 'WINNER' : 'DRAW'}
-                        </span>
-                      </div>
-
-                      <div className="relative z-10 flex flex-col items-center">
-                        <h3 className="text-white text-[28px] font-semibold tracking-tight mb-6">
-                          {gameResult.result === 'win' && gameResult.winnerId
-                            ? `${gamePlayers.find(p => p.userId === gameResult.winnerId)?.user.displayName} wins!`
-                            : 'It\'s a Draw!'}
-                        </h3>
-
-                        {gameResult.reason === 'disconnect_timeout' && (
-                          <p className="text-status-error text-sm mb-4">Opponent disconnected</p>
-                        )}
-
-                        {isOwner && (
-                          <div className="flex justify-center gap-3 w-full">
-                            <Button
-                              variant="outlined"
-                              fullWidth
-                              onClick={() => {
-                                setActiveGameId(null);
-                                setActiveGameType(null);
-                                setGameState(null);
-                                setGamePlayers([]);
-                                setGameResult(null);
-                              }}
-                            >
-                              Back to Room
-                            </Button>
-                            <Button
-                              variant="primary"
-                              fullWidth
-                              onClick={() => {
-                                if (activeGameType) {
-                                  handleStartGame(activeGameType);
-                                }
-                              }}
-                            >
-                              Play Again
-                            </Button>
-                          </div>
-                        )}
-                        {!isOwner && (
-                          <p className="text-text-muted text-sm mt-4">Waiting for owner to restart...</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                {gameResult && user && (
+                  <GameResult
+                    result={gameResult}
+                    players={gamePlayers}
+                    currentUserId={user.id}
+                    gameType={activeGameType || ''}
+                    gameState={gameState}
+                    onPlayAgain={isOwner && activeGameType ? () => handleStartGame(activeGameType) : undefined}
+                    onClose={() => {
+                      setActiveGameId(null);
+                      setActiveGameType(null);
+                      setGameState(null);
+                      setGamePlayers([]);
+                      setGameResult(null);
+                    }}
+                  />
                 )}
               </div>
             )}
           </div>
 
           {/* Chat panel (Right) */}
-          <div className="w-96 shrink-0 border-l border-white/5 flex flex-col z-10 relative bg-gradient-to-b from-[#1B132B] to-[#231840]/50 backdrop-blur-sm">
+          <div className="w-full md:w-[340px] lg:w-[360px] shrink-0 border-l border-border-default flex flex-col z-10 relative bg-bg-surface/30">
             <ChatPanel roomId={roomId!} messages={messages} />
           </div>
         </div>

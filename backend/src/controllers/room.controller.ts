@@ -1,14 +1,22 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { createRoom, listRooms, getRoomById } from '../services/room.service.js';
+import prisma from '../config/prisma.js';
+import { createRoom, listRooms, getRoomById, verifyRoomPassword } from '../services/room.service.js';
+import { RoomType } from '@prisma/client';
 
 interface CreateRoomBody {
   name: string;
+  description?: string;
   type?: string;
+  password?: string;
   maxMembers?: number;
 }
 
 interface RoomParams {
   id: string;
+}
+
+interface VerifyPasswordBody {
+  password: string;
 }
 
 export async function list(
@@ -23,7 +31,7 @@ export async function create(
   request: FastifyRequest<{ Body: CreateRoomBody }>,
   reply: FastifyReply
 ) {
-  const { name, type, maxMembers } = request.body;
+  const { name, description, type, password, maxMembers } = request.body;
 
   if (!name) {
     return reply.status(400).send({ error: 'Room name is required' });
@@ -33,10 +41,18 @@ export async function create(
     return reply.status(401).send({ error: 'Authentication required' });
   }
 
+  const roomType = type === 'PRIVATE' ? RoomType.PRIVATE : RoomType.PUBLIC;
+
+  if (roomType === RoomType.PRIVATE && !password) {
+    return reply.status(400).send({ error: 'Password is required for private rooms' });
+  }
+
   try {
     const room = await createRoom({
       name,
-      type,
+      description,
+      type: roomType,
+      password,
       maxMembers,
       ownerId: request.user.userId,
     });
@@ -58,4 +74,54 @@ export async function getById(
   }
 
   return reply.send(room);
+}
+
+export async function myRooms(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  if (!request.user) {
+    return reply.status(401).send({ error: 'Authentication required' });
+  }
+
+  const memberships = await prisma.roomMember.findMany({
+    where: { userId: request.user.userId },
+    include: {
+      room: {
+        include: {
+          members: {
+            include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+          },
+        },
+      },
+    },
+    orderBy: { joinedAt: 'desc' },
+  });
+
+  const rooms = memberships.map((m) => ({
+    ...m.room,
+    userRole: m.role,
+  }));
+
+  return reply.send(rooms);
+}
+
+export async function verifyPassword(
+  request: FastifyRequest<{ Params: RoomParams; Body: VerifyPasswordBody }>,
+  reply: FastifyReply
+) {
+  const { id } = request.params;
+  const { password } = request.body;
+
+  if (!password) {
+    return reply.status(400).send({ error: 'Password is required' });
+  }
+
+  const valid = await verifyRoomPassword(id, password);
+
+  if (!valid) {
+    return reply.status(401).send({ error: 'Invalid password' });
+  }
+
+  return reply.send({ success: true });
 }

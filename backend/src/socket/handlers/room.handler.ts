@@ -4,11 +4,20 @@ import {
   addMemberToRoom,
   removeMemberFromRoom,
 } from '../../services/room.service.js';
-import { activeGames, handlePlayerLeftRoom } from './game.handler.js';
+import { handlePlayerLeftRoom } from './game.handler.js';
+import { getActiveGame } from '../../services/gameState.service.js';
+import {
+  trackSocketRoom,
+  untrackSocketRoom,
+  getSocketRoom,
+  sanitizeString,
+} from '../authorizationGuard.js';
+import {
+  evaluateRoomOnLeave,
+  cancelEvictionOnJoin,
+} from '../roomGarbageCollector.js';
 import type { GameState } from '../../games/GameEngine.js';
-
-/* INV-001: Track which room each socket is in */
-const socketRoomMap = new Map<string, string>();
+import { GameStatus, MemberRole, MessageType } from '@prisma/client';
 
 interface RoomStateResponse {
   room: {
@@ -21,14 +30,14 @@ interface RoomStateResponse {
     userId: string;
     username: string;
     displayName: string;
-    role: 'OWNER' | 'MEMBER' | 'SPECTATOR';
+    role: string;
     isOnline: boolean;
   }>;
   messages: Array<{
     id: string;
     content: string;
-    type: 'CHAT' | 'GAME_LOG';
-    userId: string;
+    type: string;
+    userId: string | null;
     username: string;
     displayName: string;
     createdAt: string;
@@ -43,10 +52,10 @@ interface RoomStateResponse {
       username: string;
       displayName: string;
       role: string;
-      playerIndex: number;
+      symbol: string | null;
     }>;
   } | null;
-  userRole: 'OWNER' | 'MEMBER' | 'SPECTATOR';
+  userRole: string;
 }
 
 export function registerRoomHandlers(io: Server, socket: Socket) {
@@ -57,7 +66,6 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
     try {
       const { roomId } = data;
 
-      /* Step 1: Verify membership */
       const membership = await prisma.roomMember.findFirst({
         where: { userId, roomId },
       });
@@ -67,18 +75,13 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      /* Step 2: Fetch room data with members and messages */
       const room = await prisma.room.findUnique({
         where: { id: roomId },
         include: {
           members: {
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  displayName: true,
-                },
+                select: { id: true, username: true, displayName: true },
               },
             },
           },
@@ -87,11 +90,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
             take: 100,
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  displayName: true,
-                },
+                select: { id: true, username: true, displayName: true },
               },
             },
           },
@@ -103,71 +102,61 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      /* Step 3: Fetch active game from database */
       const activeGameRecord = await prisma.game.findFirst({
-        where: { roomId, status: 'IN_PROGRESS' },
+        where: { roomId, status: GameStatus.IN_PROGRESS },
         include: {
           players: {
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  displayName: true,
-                },
+                select: { id: true, username: true, displayName: true },
               },
             },
           },
         },
       });
 
-      /* Step 4: Fetch active game state from memory */
       let activeGame: RoomStateResponse['activeGame'] = null;
 
       if (activeGameRecord) {
-        const memoryGame = activeGames.get(activeGameRecord.id);
+        const memoryGame = getActiveGame(activeGameRecord.id);
 
         if (memoryGame) {
-          /* Game is in memory - use current state */
           activeGame = {
             gameId: activeGameRecord.id,
-            gameType: activeGameRecord.gameType,
+            gameType: activeGameRecord.type,
             status: activeGameRecord.status,
             state: memoryGame.state,
-            players: activeGameRecord.players.map((p: any) => ({
+            players: activeGameRecord.players.map((p) => ({
               userId: p.userId,
               username: p.user.username,
               displayName: p.user.displayName,
               role: p.role,
-              playerIndex: p.playerIndex,
+              symbol: p.symbol,
             })),
           };
         } else {
-          /* Game exists in DB but not in memory - reconstruct from DB */
-          const state = JSON.parse(activeGameRecord.state) as GameState;
+          const state = activeGameRecord.state as GameState;
           activeGame = {
             gameId: activeGameRecord.id,
-            gameType: activeGameRecord.gameType,
+            gameType: activeGameRecord.type,
             status: activeGameRecord.status,
             state,
-            players: activeGameRecord.players.map((p: any) => ({
+            players: activeGameRecord.players.map((p) => ({
               userId: p.userId,
               username: p.user.username,
               displayName: p.user.displayName,
               role: p.role,
-              playerIndex: p.playerIndex,
+              symbol: p.symbol,
             })),
           };
         }
       }
 
-      /* Step 5: Reconstruct online status from socket connections */
       const socketsInRoom = await io.in(roomId).fetchSockets();
       const onlineUserIds = new Set(
         socketsInRoom.map((s) => (s.data as { userId: string }).userId)
       );
 
-      /* Step 6: Build response */
       const response: RoomStateResponse = {
         room: {
           id: room.id,
@@ -175,38 +164,37 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
           type: room.type,
           maxMembers: room.maxMembers,
         },
-        members: room.members.map((m: any) => ({
+        members: room.members.map((m) => ({
           userId: m.userId,
           username: m.user.username,
           displayName: m.user.displayName,
-          role: m.role as 'OWNER' | 'MEMBER' | 'SPECTATOR',
+          role: m.role,
           isOnline: onlineUserIds.has(m.userId),
         })),
-        messages: room.messages.reverse().map((msg: any) => ({
+        messages: room.messages.reverse().map((msg) => ({
           id: msg.id,
           content: msg.content,
-          type: msg.type as 'CHAT' | 'GAME_LOG',
+          type: msg.type,
           userId: msg.userId,
-          username: msg.user.username,
-          displayName: msg.user.displayName,
+          username: msg.user?.username || 'System',
+          displayName: msg.user?.displayName || 'System',
           createdAt: msg.createdAt.toISOString(),
         })),
         activeGame,
-        userRole: membership.role as 'OWNER' | 'MEMBER' | 'SPECTATOR',
+        userRole: membership.role,
       };
 
       if (callback) callback(response);
-    } catch (error) {
+    } catch {
       if (callback) callback({ error: 'Failed to fetch room state' });
     }
   });
 
-  socket.on('room:join', async (data: { roomId: string }, callback?: (res: { error?: string }) => void) => {
+  socket.on('room:join', async (data: { roomId: string; password?: string }, callback?: (res: { error?: string }) => void) => {
     try {
-      const { roomId } = data;
+      const { roomId, password } = data;
 
-      /* INV-001: User can only be in one room at a time */
-      const currentRoom = socketRoomMap.get(socket.id);
+      const currentRoom = getSocketRoom(socket.id);
       if (currentRoom) {
         if (callback) callback({ error: 'You are already in a room. Leave first.' });
         return;
@@ -216,32 +204,43 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         where: { id: roomId },
         include: {
           members: true,
-          games: { where: { status: 'IN_PROGRESS' }, take: 1 },
+          games: { where: { status: GameStatus.IN_PROGRESS }, take: 1 },
         },
       });
 
-      if (!room) {
-        if (callback) callback({ error: 'Room not found' });
+      if (!room || !room.isActive) {
+        if (callback) callback({ error: 'Room not found or inactive' });
         return;
       }
 
-      /* Check if user is already a member (e.g., OWNER who created the room) */
-      const existingMember = room.members.find((m: any) => m.userId === userId);
+      const existingMember = room.members.find((m) => m.userId === userId);
 
-      /* INV-004: If game is in progress, new joiners become spectators */
+      if (room.type === 'PRIVATE' && !existingMember) {
+        if (!password) {
+          if (callback) callback({ error: 'Password required for private room' });
+          return;
+        }
+        const bcrypt = await import('bcrypt');
+        const valid = room.passwordHash ? await bcrypt.compare(password, room.passwordHash) : false;
+        if (!valid) {
+          if (callback) callback({ error: 'Invalid room password' });
+          return;
+        }
+      }
+
       const activeGame = room.games[0];
-      let role: string;
+      let role: MemberRole;
       if (existingMember) {
-        role = existingMember.role; /* Preserve existing role (OWNER, MEMBER) */
+        role = existingMember.role;
       } else {
-        role = activeGame ? 'SPECTATOR' : 'MEMBER';
+        role = activeGame ? MemberRole.SPECTATOR : MemberRole.MEMBER;
         await addMemberToRoom(roomId, userId, role);
       }
 
       socket.join(roomId);
-      socketRoomMap.set(socket.id, roomId);
+      trackSocketRoom(socket.id, roomId);
+      cancelEvictionOnJoin(roomId);
 
-      /* INV-006: Do not replay old messages */
       socket.emit('room:joined', { roomId, role });
       socket.to(roomId).emit('room:user_joined', {
         userId,
@@ -249,7 +248,6 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         role,
       });
 
-      /* Emit room:updated */
       const updatedRoom = await prisma.room.findUnique({
         where: { id: roomId },
         include: {
@@ -267,13 +265,11 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
   });
 
   socket.on('room:leave', async (data?: { roomId?: string }) => {
-    const roomId = data?.roomId || socketRoomMap.get(socket.id);
+    const roomId = data?.roomId || getSocketRoom(socket.id);
     if (!roomId) return;
 
-    /* Don't delete membership from DB — just leave the socket room.
-       Membership (including OWNER role) is persistent. */
     socket.leave(roomId);
-    socketRoomMap.delete(socket.id);
+    untrackSocketRoom(socket.id);
 
     const sockets = await io.in(roomId).fetchSockets();
     const hasOtherSockets = sockets.some((s) => s.data.userId === userId && s.id !== socket.id);
@@ -282,16 +278,101 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
       socket.to(roomId).emit('room:user_left', { userId, username });
       await handlePlayerLeftRoom(io, userId, roomId);
     }
+
+    await evaluateRoomOnLeave(roomId);
   });
 
-  socket.on('message:send', async (data: { roomId: string; content: string }) => {
-    const { roomId, content } = data;
-    if (!content || !roomId) return;
+  socket.on('room:kick', async (data: { roomId: string; targetUserId: string }, callback?: (res: { error?: string }) => void) => {
+    try {
+      const { roomId, targetUserId } = data;
+
+      const membership = await prisma.roomMember.findFirst({
+        where: { userId, roomId, role: MemberRole.OWNER },
+      });
+
+      if (!membership) {
+        if (callback) callback({ error: 'Only the room owner can kick members' });
+        return;
+      }
+
+      await removeMemberFromRoom(roomId, targetUserId);
+
+      const targetSockets = await io.in(roomId).fetchSockets();
+      for (const s of targetSockets) {
+        if ((s.data as { userId: string }).userId === targetUserId) {
+          s.leave(roomId);
+          s.emit('room:kicked', { roomId });
+        }
+      }
+
+      io.to(roomId).emit('room:user_left', { userId: targetUserId, username: '' });
+
+      if (callback) callback({});
+    } catch {
+      if (callback) callback({ error: 'Failed to kick user' });
+    }
+  });
+
+  socket.on('room:close', async (data: { roomId: string }, callback?: (res: { error?: string }) => void) => {
+    try {
+      const { roomId } = data;
+
+      const membership = await prisma.roomMember.findFirst({
+        where: { userId, roomId, role: MemberRole.OWNER },
+      });
+
+      if (!membership) {
+        if (callback) callback({ error: 'Only the room owner can close the room' });
+        return;
+      }
+
+      await prisma.room.update({
+        where: { id: roomId },
+        data: { isActive: false, currentGameId: null },
+      });
+
+      io.to(roomId).emit('room:closed', { roomId });
+
+      const socketsInRoom = await io.in(roomId).fetchSockets();
+      for (const s of socketsInRoom) {
+        s.leave(roomId);
+        untrackSocketRoom(s.id);
+      }
+
+      await prisma.roomMember.deleteMany({ where: { roomId } });
+
+      if (callback) callback({});
+    } catch {
+      if (callback) callback({ error: 'Failed to close room' });
+    }
+  });
+
+  socket.on('message:send', async (data: { roomId: string; content: string; clientId?: string }, callback?: (res: { error?: string }) => void) => {
+    const { roomId, content, clientId } = data;
+    if (!content || !roomId) {
+      if (callback) callback({ error: 'Missing roomId or content' });
+      return;
+    }
+
+    const sanitizedContent = sanitizeString(content, 2000);
+    if (!sanitizedContent) {
+      if (callback) callback({ error: 'Message content is empty' });
+      return;
+    }
+
+    const membership = await prisma.roomMember.findFirst({
+      where: { userId, roomId },
+    });
+
+    if (!membership) {
+      if (callback) callback({ error: 'Not a member of this room' });
+      return;
+    }
 
     const message = await prisma.message.create({
       data: {
-        content,
-        type: 'CHAT',
+        content: sanitizedContent,
+        type: MessageType.CHAT,
         userId,
         roomId,
       },
@@ -300,14 +381,19 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
       },
     });
 
-    io.to(roomId).emit('message:received', message);
+    io.to(roomId).emit('message:received', {
+      ...message,
+      createdAt: message.createdAt.toISOString(),
+      ...(clientId ? { clientId } : {}),
+    });
+
+    if (callback) callback({});
   });
 
-  /* Handle disconnect - cleanup socket tracking only */
   socket.on('disconnect', async () => {
-    const roomId = socketRoomMap.get(socket.id);
+    const roomId = getSocketRoom(socket.id);
     if (roomId) {
-      socketRoomMap.delete(socket.id);
+      untrackSocketRoom(socket.id);
 
       const sockets = await io.in(roomId).fetchSockets();
       const hasOtherSockets = sockets.some((s) => s.data.userId === userId && s.id !== socket.id);
@@ -315,8 +401,8 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
       if (!hasOtherSockets) {
         socket.to(roomId).emit('room:user_left', { userId, username });
       }
+
+      await evaluateRoomOnLeave(roomId);
     }
   });
 }
-
-export { socketRoomMap };

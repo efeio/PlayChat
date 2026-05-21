@@ -39,63 +39,65 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-white font-semibold text-lg">
-            {winner
-              ? `${getPlayerName(winner)} wins!`
-              : 'Draw!'}
+          <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
+            {winner ? `${getPlayerName(winner)} kazandı!` : 'Berabere!'}
           </p>
         ) : (
           <p className="text-text-secondary text-sm">
             {isMyTurn ? (
-              <span className="text-accent-yellow font-medium">Your turn</span>
+              <span className="text-accent-secondary font-semibold">Sıra sende</span>
             ) : (
-              `Waiting for ${getPlayerName(currentTurnPlayer)}...`
+              `${getPlayerName(currentTurnPlayer)} bekleniyor...`
             )}
           </p>
         )}
       </div>
 
       {/* Players */}
-      <div className="flex gap-6">
+      <div className="flex gap-4">
         {gameState.players.map((pid, i) => (
           <div
             key={pid}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all duration-200 ${
+            className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
               currentPlayerIndex === i && !isFinished
-                ? 'bg-[#1B132B]/80 border border-white/10 backdrop-blur-md shadow-md'
+                ? 'bg-bg-card border border-accent-primary/20 shadow-lg shadow-accent-primary/5'
                 : 'text-text-secondary border border-transparent'
             }`}
           >
-            <span className={`text-base font-black ${i === 0 ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]'}`}>
+            <span className={`text-lg font-black ${i === 0 ? 'text-indigo-400' : 'text-cyan-400'}`}>
               {i === 0 ? 'X' : 'O'}
             </span>
-            <span className={currentPlayerIndex === i && !isFinished ? 'text-white' : ''}>{getPlayerName(pid)}</span>
+            <span className={currentPlayerIndex === i && !isFinished ? 'text-white font-medium' : ''}>
+              {getPlayerName(pid)}
+            </span>
           </div>
         ))}
       </div>
 
       {/* Board */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 p-4 bg-[#1B132B]/80 rounded-2xl backdrop-blur-xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-        {board.map((cell, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleCellClick(idx)}
-            disabled={isFinished || !isMyTurn || isProcessing || !!cell}
-            className="w-16 h-16 sm:w-20 sm:h-20 bg-[#120A1F]/50 rounded-xl flex items-center justify-center border border-white/5 hover:bg-white/5 transition-colors disabled:cursor-default disabled:hover:bg-[#120A1F]/50"
-          >
-            <span
-              className={`text-4xl sm:text-5xl font-black ${
-                cell === 'X'
-                  ? 'text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]'
-                  : cell === 'O'
-                  ? 'text-purple-400 drop-shadow-[0_0_12px_rgba(192,132,252,0.8)]'
-                  : ''
+      <div className="game-board p-4 sm:p-5">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+          {board.map((cell, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleCellClick(idx)}
+              disabled={isFinished || !isMyTurn || isProcessing || !!cell}
+              className={`game-cell w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center cursor-pointer disabled:cursor-default ${
+                !cell && isMyTurn && !isFinished ? 'hover:bg-accent-primary/10 hover:border-accent-primary/30' : ''
               }`}
             >
-              {cell}
-            </span>
-          </button>
-        ))}
+              {cell && (
+                <span className={`text-3xl sm:text-4xl font-black transition-all duration-200 ${
+                  cell === 'X'
+                    ? 'text-indigo-400 drop-shadow-[0_0_12px_rgba(99,102,241,0.7)]'
+                    : 'text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]'
+                }`}>
+                  {cell}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

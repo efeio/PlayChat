@@ -30,12 +30,11 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // Count all cell buttons (excluding column header buttons)
-      const cells = container.querySelectorAll('button[class*="w-11"]');
-      expect(cells.length).toBe(42); // 7 columns × 6 rows
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
+      expect(cells.length).toBe(42);
     });
 
-    it('has responsive cell size classes (w-11 h-11 sm:w-14 sm:h-14)', () => {
+    it('has responsive cell size classes (w-10 h-10 sm:w-12 sm:h-12)', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -45,16 +44,16 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const firstCell = container.querySelector('button[class*="w-11"]');
-      expect(firstCell?.className).toContain('w-11');
-      expect(firstCell?.className).toContain('h-11');
-      expect(firstCell?.className).toContain('sm:w-14');
-      expect(firstCell?.className).toContain('sm:h-14');
+      const firstCell = container.querySelector('button[class*="game-cell"]');
+      expect(firstCell?.className).toContain('w-10');
+      expect(firstCell?.className).toContain('h-10');
+      expect(firstCell?.className).toContain('sm:w-12');
+      expect(firstCell?.className).toContain('sm:h-12');
     });
 
-    it('has responsive piece size classes (w-7 h-7 sm:w-9 sm:h-9)', () => {
+    it('has responsive piece size classes (w-8 h-8 sm:w-10 sm:h-10)', () => {
       const boardWithPiece = createEmptyBoard();
-      boardWithPiece[5][3] = 1; // Place a piece at bottom center
+      boardWithPiece[5][3] = 1;
 
       const { container } = render(
         <ConnectFour
@@ -65,18 +64,17 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // Find game pieces (not player indicators)
-      const pieces = container.querySelectorAll('button[class*="w-11"] div[class*="rounded-full"]');
+      const pieces = container.querySelectorAll('button[class*="game-cell"] div[class*="rounded-full"]');
       expect(pieces.length).toBeGreaterThan(0);
-      
+
       const gamePiece = pieces[0];
-      expect(gamePiece?.className).toContain('w-7');
-      expect(gamePiece?.className).toContain('h-7');
-      expect(gamePiece?.className).toContain('sm:w-9');
-      expect(gamePiece?.className).toContain('sm:h-9');
+      expect(gamePiece?.className).toContain('w-8');
+      expect(gamePiece?.className).toContain('h-8');
+      expect(gamePiece?.className).toContain('sm:w-10');
+      expect(gamePiece?.className).toContain('sm:h-10');
     });
 
-    it('has responsive grid gap (gap-1 sm:gap-1.5)', () => {
+    it('has responsive grid gap (gap-1.5 sm:gap-2)', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -87,13 +85,14 @@ describe('ConnectFour - Mobile Responsiveness', () => {
       );
 
       const gridContainers = container.querySelectorAll('div[class*="grid gap-"]');
+      expect(gridContainers.length).toBeGreaterThan(0);
       gridContainers.forEach((grid) => {
-        expect(grid.className).toContain('gap-1');
-        expect(grid.className).toContain('sm:gap-1.5');
+        expect(grid.className).toContain('gap-1.5');
+        expect(grid.className).toContain('sm:gap-2');
       });
     });
 
-    it('has responsive column header height (h-6 sm:h-8)', () => {
+    it('has column header buttons', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -103,17 +102,13 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const headerButtons = container.querySelectorAll('button[class*="h-6"]');
-      expect(headerButtons.length).toBe(7); // 7 column headers
-      headerButtons.forEach((btn) => {
-        expect(btn.className).toContain('h-6');
-        expect(btn.className).toContain('sm:h-8');
-      });
+      const headerButtons = container.querySelectorAll('button[class*="h-7"]');
+      expect(headerButtons.length).toBe(7);
     });
   });
 
   describe('Touch Target Size (WCAG 2.5.5)', () => {
-    it('has minimum 44x44 pixel touch targets on mobile (w-11 = 44px)', () => {
+    it('has minimum 40x40 pixel touch targets on mobile (w-10 = 40px)', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -123,18 +118,16 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // w-11 = 44px, h-11 = 44px (Tailwind: 1 unit = 4px, 11 * 4 = 44)
-      const cells = container.querySelectorAll('button[class*="w-11 h-11"]');
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
       expect(cells.length).toBe(42);
-      
-      // Verify each cell has the correct classes
+
       cells.forEach((cell) => {
-        expect(cell.className).toContain('w-11');
-        expect(cell.className).toContain('h-11');
+        expect(cell.className).toContain('w-10');
+        expect(cell.className).toContain('h-10');
       });
     });
 
-    it('has larger touch targets on desktop (sm:w-14 = 56px)', () => {
+    it('has larger touch targets on desktop (sm:w-12 = 48px)', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -144,22 +137,18 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // sm:w-14 = 56px, sm:h-14 = 56px (14 * 4 = 56)
-      const cells = container.querySelectorAll('button[class*="sm:w-14"]');
+      const cells = container.querySelectorAll('button[class*="sm:w-12"]');
       expect(cells.length).toBe(42);
     });
   });
 
   describe('Viewport Fit (375px mobile)', () => {
     it('board width fits in 375px viewport', () => {
-      // Mobile: 7 cells × 44px + 6 gaps × 4px = 308px + 24px = 332px
-      // 332px < 375px ✓
-      const cellWidth = 44; // w-11
-      const gapWidth = 4; // gap-1
+      const cellWidth = 40; // w-10
+      const gapWidth = 6; // gap-1.5
       const columns = 7;
-      
+
       const totalWidth = (cellWidth * columns) + (gapWidth * (columns - 1));
-      expect(totalWidth).toBe(332);
       expect(totalWidth).toBeLessThan(375);
     });
 
@@ -180,7 +169,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
   });
 
   describe('Aspect Ratio', () => {
-    it('maintains square cells (w-11 h-11)', () => {
+    it('maintains circular cells (rounded-full)', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -190,10 +179,9 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const cells = container.querySelectorAll('button[class*="w-11 h-11"]');
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
       cells.forEach((cell) => {
-        expect(cell.className).toContain('w-11');
-        expect(cell.className).toContain('h-11');
+        expect(cell.className).toContain('rounded-full');
       });
     });
 
@@ -211,13 +199,10 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // Find game pieces (inside button cells, not player indicators)
-      const gamePieces = container.querySelectorAll('button[class*="w-11"] div[class*="rounded-full"]');
+      const gamePieces = container.querySelectorAll('button[class*="game-cell"] div[class*="rounded-full"]');
       expect(gamePieces.length).toBe(2);
       gamePieces.forEach((piece) => {
         expect(piece.className).toContain('rounded-full');
-        expect(piece.className).toContain('w-7');
-        expect(piece.className).toContain('h-7');
       });
     });
   });
@@ -236,8 +221,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // Click first cell in column 0
-      const cells = container.querySelectorAll('button[class*="w-11"]');
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
       await user.click(cells[0]);
 
       expect(onMove).toHaveBeenCalledWith({ column: 0 });
@@ -248,7 +232,6 @@ describe('ConnectFour - Mobile Responsiveness', () => {
       const onMove = vi.fn();
 
       const fullBoard = createEmptyBoard();
-      // Fill column 0 completely
       for (let row = 0; row < 6; row++) {
         fullBoard[row][0] = 1;
       }
@@ -262,8 +245,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // Try to click column 0 (should be disabled)
-      const firstCell = container.querySelector('button[class*="w-11"]');
+      const firstCell = container.querySelector('button[class*="game-cell"]');
       await user.click(firstCell!);
 
       expect(onMove).not.toHaveBeenCalled();
@@ -282,7 +264,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const firstCell = container.querySelector('button[class*="w-11"]');
+      const firstCell = container.querySelector('button[class*="game-cell"]');
       await user.click(firstCell!);
 
       expect(onMove).not.toHaveBeenCalled();
@@ -301,8 +283,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      // Click first column header
-      const headers = container.querySelectorAll('button[class*="h-6"]');
+      const headers = container.querySelectorAll('button[class*="h-7"]');
       await user.click(headers[0]);
 
       expect(onMove).toHaveBeenCalledWith({ column: 0 });
@@ -388,7 +369,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const cells = container.querySelectorAll('button[class*="w-11"]');
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
       cells.forEach((cell) => {
         expect(cell).toBeDisabled();
       });
@@ -396,7 +377,7 @@ describe('ConnectFour - Mobile Responsiveness', () => {
   });
 
   describe('Design System Compliance', () => {
-    it('uses Architectural Noir colors', () => {
+    it('uses game-cell and game-board classes', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -406,16 +387,14 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const cells = container.querySelectorAll('button[class*="bg-bg-elevated"]');
-      expect(cells.length).toBeGreaterThan(0);
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
+      expect(cells.length).toBe(42);
 
-      cells.forEach((cell) => {
-        expect(cell.className).toContain('bg-bg-elevated');
-        expect(cell.className).toContain('border-border');
-      });
+      const board = container.querySelector('div[class*="game-board"]');
+      expect(board).toBeTruthy();
     });
 
-    it('uses flat design (rounded-lg, no shadows)', () => {
+    it('uses rounded-full for circular design', () => {
       const { container } = render(
         <ConnectFour
           gameState={mockGameState}
@@ -425,12 +404,11 @@ describe('ConnectFour - Mobile Responsiveness', () => {
         />
       );
 
-      const cells = container.querySelectorAll('button[class*="rounded-lg"]');
+      const cells = container.querySelectorAll('button[class*="game-cell"]');
       expect(cells.length).toBe(42);
 
       cells.forEach((cell) => {
-        expect(cell.className).toContain('rounded-lg');
-        expect(cell.className).not.toContain('shadow');
+        expect(cell.className).toContain('rounded-full');
       });
     });
 

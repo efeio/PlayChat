@@ -28,12 +28,10 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
   const { word, winner, draw, playerStates } = gameState;
   const isFinished = !!winner || draw;
 
-  // The current player's state
   const myState = playerStates[currentUserId] || { guessedLetters: [], wrongCount: 0 };
   const { guessedLetters, wrongCount } = myState;
   const remaining = MAX_WRONG - wrongCount;
 
-  // The opponent's state (for reference/UI)
   const opponentId = gameState.players.find(id => id !== currentUserId) || '';
   const opponentState = playerStates[opponentId] || { guessedLetters: [], wrongCount: 0 };
   const opponentRemaining = MAX_WRONG - opponentState.wrongCount;
@@ -66,48 +64,48 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-white font-semibold text-lg">
+          <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
             {winner === currentUserId
-              ? 'You guessed the word! You win!'
+              ? 'You guessed the word!'
               : winner
-              ? `${getPlayerName(winner)} guessed the word first!`
+              ? `${getPlayerName(winner)} ilk bildi!`
               : draw
-              ? "It's a draw! Both players ran out of guesses."
-              : 'Game over'}
+              ? 'Berabere!'
+              : 'Oyun bitti'}
           </p>
         ) : (
           <p className="text-text-secondary text-sm">
             {wrongCount >= MAX_WRONG ? (
-              <span className="text-status-error font-medium">You are out of guesses! Waiting for opponent...</span>
+              <span className="text-status-error font-medium">Tahmin hakkın bitti! Rakip bekleniyor...</span>
             ) : (
-              <span className="text-white font-medium">Guess the word before your opponent!</span>
+              <span className="text-accent-secondary font-medium">Rakibinden önce kelimeyi bul!</span>
             )}
           </p>
         )}
       </div>
 
-      {/* Opponent Status */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs w-full max-w-md justify-center">
-        <div className={`px-3 py-1.5 rounded-xl border transition-all duration-200 bg-[#1B132B]/80 text-text-secondary border-white/5 backdrop-blur-md`}>
-          <span className="opacity-60">{getPlayerName(opponentId)}:</span>{' '}
-          <span className="font-medium">{opponentRemaining} guesses left</span>
+      {/* Opponent status */}
+      <div className="flex gap-4 text-xs">
+        <div className="px-3 py-1.5 rounded-xl bg-bg-card border border-border-default text-text-secondary">
+          <span className="text-text-muted">{getPlayerName(opponentId)}:</span>{' '}
+          <span className="font-medium">{opponentRemaining} kaldı</span>
+        </div>
+        <div className={`px-3 py-1.5 rounded-xl border font-medium ${
+          remaining <= 2 ? 'bg-status-error/10 border-status-error/20 text-status-error' : 'bg-bg-card border-border-default text-text-secondary'
+        }`}>
+          Sen: {remaining} kaldı
         </div>
       </div>
 
       {/* Hangman figure */}
-      <div className="w-32 h-40 sm:w-40 sm:h-48 bg-[#1B132B]/80 rounded-2xl flex items-center justify-center border border-white/5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-        <pre className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] text-center text-base sm:text-lg font-mono leading-tight select-none">
+      <div className="w-36 h-44 sm:w-40 sm:h-48 game-board flex items-center justify-center">
+        <pre className="text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)] text-center text-base sm:text-lg font-mono leading-tight select-none">
           {`  ┌───┐\n  │   ${wrongCount >= 1 ? 'O' : ' '}\n  │  ${wrongCount >= 3 ? '/' : ' '}${wrongCount >= 2 ? '|' : ' '}${wrongCount >= 4 ? '\\' : ' '}\n  │  ${wrongCount >= 5 ? '/' : ' '} ${wrongCount >= 6 ? '\\' : ' '}\n──┴──`}
         </pre>
       </div>
 
-      {/* Wrong count */}
-      <p className="text-text-muted text-xs">
-        {remaining} guess{remaining !== 1 ? 'es' : ''} remaining
-      </p>
-
       {/* Word display */}
-      <div className="text-xl sm:text-2xl font-mono text-white tracking-[0.2em] sm:tracking-[0.3em] select-none text-center">
+      <div className="text-xl sm:text-2xl font-mono text-white tracking-[0.2em] sm:tracking-[0.3em] select-none text-center px-4">
         {maskedWord}
       </div>
 
@@ -124,12 +122,12 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
                   key={letter}
                   onClick={() => handleLetterGuess(letter)}
                   disabled={used}
-                  className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 cursor-pointer disabled:cursor-default border ${
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer disabled:cursor-default border ${
                     isCorrect
-                      ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.3)]'
+                      ? 'bg-accent-success/15 text-accent-success border-accent-success/30'
                       : isWrong
-                      ? 'bg-black/20 text-text-muted border-white/5 opacity-50'
-                      : 'bg-[#1B132B]/80 text-white border-white/5 hover:border-cyan-500/30 hover:bg-[#1B132B] shadow-inner backdrop-blur-md'
+                      ? 'bg-bg-base/50 text-text-muted border-border-subtle opacity-40'
+                      : 'bg-bg-card text-white border-border-default hover:border-accent-primary/40 hover:bg-accent-primary/5'
                   }`}
                 >
                   {letter}
@@ -144,14 +142,14 @@ export function Hangman({ gameState, onMove, currentUserId, players }: HangmanPr
               value={wordGuess}
               onChange={(e) => setWordGuess(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleWordGuess()}
-              placeholder="Guess the word..."
-              className="flex-1 bg-[#120A1F]/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all duration-200 backdrop-blur-md shadow-inner"
+              placeholder="Kelimeyi tahmin et..."
+              className="flex-1 bg-bg-base/60 border border-border-default rounded-xl px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent-primary/40 focus:ring-2 focus:ring-accent-primary/10 transition-all duration-200"
             />
             <Button
               onClick={handleWordGuess}
               disabled={!wordGuess.trim()}
             >
-              Guess
+              Tahmin
             </Button>
           </div>
         </>

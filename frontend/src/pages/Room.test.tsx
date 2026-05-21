@@ -318,13 +318,13 @@ describe('Room - Toast Integration', () => {
       });
     });
 
-    // Check that addToast was called with success message
+    // Current user (user-1) lost, so toast should show as error
     await waitFor(() => {
-      expect(mockAddToast).toHaveBeenCalledWith('success', 'Player Two wins!');
+      expect(mockAddToast).toHaveBeenCalledWith('error', 'Player Two won the game.');
     });
   });
 
-  it('should show success toast when game ends in draw', async () => {
+  it('should show info toast when game ends in draw', async () => {
     renderRoom();
 
     // Wait for socket event listeners to be set up
@@ -346,9 +346,8 @@ describe('Room - Toast Integration', () => {
       });
     });
 
-    // Check that addToast was called with success message
     await waitFor(() => {
-      expect(mockAddToast).toHaveBeenCalledWith('success', 'Game ended in a draw!');
+      expect(mockAddToast).toHaveBeenCalledWith('info', 'Game ended in a draw!');
     });
   });
 });
@@ -510,7 +509,7 @@ describe('Room - State Recovery Error Handling', () => {
 
     // Check that retry button is displayed
     await waitFor(() => {
-      const retryButton = screen.getByRole('button', { name: /retry/i });
+      const retryButton = screen.getByRole('button', { name: /try again/i });
       expect(retryButton).toBeInTheDocument();
     });
 
@@ -556,7 +555,7 @@ describe('Room - State Recovery Error Handling', () => {
     });
 
     // Wait for retry button to appear
-    const retryButton = await screen.findByRole('button', { name: /retry/i });
+    const retryButton = await screen.findByRole('button', { name: /try again/i });
     expect(retryButton).toBeInTheDocument();
 
     // Setup mock to succeed on retry
@@ -591,7 +590,7 @@ describe('Room - State Recovery Error Handling', () => {
 
     // Check that error UI is no longer shown (retry button should disappear)
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /retry/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /try again/i })).not.toBeInTheDocument();
     });
   }, 10000);
 });
