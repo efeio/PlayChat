@@ -14,8 +14,10 @@ import { list, create, getById, myRooms, verifyPassword } from './controllers/ro
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from './controllers/notification.controller.js';
 import { getProfile, updateProfile, getUserStats } from './controllers/user.controller.js';
 import { authenticate } from './middleware/authenticate.js';
+import prisma from './config/prisma.js';
 import { rateLimitMiddleware } from './middleware/rateLimitMiddleware.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { GameType } from '@prisma/client';
 import { initSocket, shutdownSocketSubsystem } from './socket/index.js';
 import {
   rehydrateActiveGames,
@@ -25,14 +27,24 @@ import {
 import { connectRedis, disconnectRedis } from './config/redis.js';
 import env from './config/env.js';
 
+process.on('unhandledRejection', (reason) => {
+  console.error('[UnhandledRejection]', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[UncaughtException]', error);
+  process.exit(1);
+});
+
 async function main() {
   const app = Fastify({
     logger: true,
   });
 
+  const isDevWildcard = env.CORS_ORIGIN === '*';
   await app.register(cors, {
-    origin: env.CORS_ORIGIN,
-    credentials: true,
+    origin: isDevWildcard ? true : env.CORS_ORIGIN,
+    credentials: !isDevWildcard,
   });
 
   app.setErrorHandler(errorHandler);
@@ -45,8 +57,8 @@ async function main() {
     app.log.warn('Redis connection failed — running without cache/rate-limiting');
   }
 
-  // Apply rate limiting to sensitive endpoints
-  app.addHook('onRequest', rateLimitMiddleware);
+  // Apply rate limiting — runs after authenticate so request.user is available
+  app.addHook('preHandler', rateLimitMiddleware);
 
   app.post('/api/auth/register', register as any);
   app.post('/api/auth/login', login as any);
@@ -79,6 +91,49 @@ async function main() {
   app.put('/api/users/me', { preHandler: [authenticate] }, updateProfile as any);
   app.get<{ Params: { id: string } }>('/api/users/:id/stats', getUserStats as any);
 
+  // Leaderboard
+  app.get('/api/leaderboard', async (request, reply) => {
+    const { game } = request.query as { game?: string };
+
+    const FILTER_MAP: Record<string, GameType> = {
+      'global': 'GENERAL' as GameType,
+      'tic-tac-toe': 'TIC_TAC_TOE' as GameType,
+      'connect-four': 'CONNECT_FOUR' as GameType,
+      'wordle': 'WORDLE' as GameType,
+      'memory-cards': 'MEMORY_CARDS' as GameType,
+      'hangman': 'HANGMAN' as GameType,
+      'number-guess': 'NUMBER_GUESS' as GameType,
+      'rock-paper-scissors': 'ROCK_PAPER_SCISSORS' as GameType,
+    };
+
+    const gameType = FILTER_MAP[game || 'global'] || ('GENERAL' as GameType);
+
+    const stats = await prisma.userStats.findMany({
+      where: {
+        gameType,
+        gamesPlayed: { gt: 0 },
+      },
+      include: {
+        user: { select: { id: true, username: true, displayName: true } },
+      },
+      orderBy: { wins: 'desc' },
+      take: 50,
+    });
+
+    const entries = stats.map((s, i) => ({
+      rank: i + 1,
+      userId: s.userId,
+      username: s.user.username,
+      displayName: s.user.displayName,
+      totalMatches: s.gamesPlayed,
+      wins: s.wins,
+      losses: s.losses,
+      winRate: s.gamesPlayed > 0 ? Math.round((s.wins / s.gamesPlayed) * 100) : 0,
+    }));
+
+    return reply.send(entries);
+  });
+
   app.get('/api/health', async () => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   });
@@ -93,11 +148,23 @@ async function main() {
   }
   startSnapshotInterval();
 
+  let isShuttingDown = false;
   const shutdown = async () => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
     app.log.info('Shutting down gracefully...');
-    stopSnapshotInterval();
+
+    const forceExitTimer = setTimeout(() => {
+      app.log.error('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 15000);
+    forceExitTimer.unref();
+
+    await stopSnapshotInterval();
     shutdownSocketSubsystem(io);
     await disconnectRedis();
+    await prisma.$disconnect();
     await app.close();
     process.exit(0);
   };

@@ -73,7 +73,7 @@ export class TicTacToe extends GameEngine {
     const symbol = s.board[m.position];
     const row = Math.floor(m.position / 3) + 1;
     const col = (m.position % 3) + 1;
-    return `placed ${symbol} at row ${row}, col ${col}`;
+    return `${symbol} işaretini satır ${row}, sütun ${col}'e koydu`;
   }
 
   private _checkWinner(board: (string | null)[], players: string[]): string | null {

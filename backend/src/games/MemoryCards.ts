@@ -24,11 +24,15 @@ interface MemoryCardsState extends GameState {
   pairCount: number;
   matchedPairs: number;
   lastAction: 'flip' | 'match' | 'mismatch' | null;
+  turnLocked: boolean;
+  turnLockExpiry: number;
 }
 
 interface MemoryCardsMove extends Move {
   cardId: number;
 }
+
+const MISMATCH_LOCK_MS = 1200;
 
 export class MemoryCards extends GameEngine {
   initialize(players: string[]): MemoryCardsState {
@@ -61,6 +65,8 @@ export class MemoryCards extends GameEngine {
       pairCount,
       matchedPairs: 0,
       lastAction: null,
+      turnLocked: false,
+      turnLockExpiry: 0,
     };
   }
 
@@ -69,14 +75,23 @@ export class MemoryCards extends GameEngine {
     const m = move as MemoryCardsMove;
 
     if (s.finished) return false;
+
     if (s.players[s.currentPlayerIndex] !== userId) return false;
+
+    if (s.turnLocked) {
+      const now = Date.now();
+      if (now < s.turnLockExpiry) return false;
+    }
+
     if (typeof m.cardId !== 'number') return false;
     if (m.cardId < 0 || m.cardId >= s.cards.length) return false;
 
     const card = s.cards[m.cardId];
     if (card.isMatched) return false;
     if (card.isFlipped) return false;
-    if (s.flippedCards.length >= 2) return false;
+
+    const effectiveFlipped = s.lastAction === 'mismatch' ? 0 : s.flippedCards.length;
+    if (effectiveFlipped >= 2) return false;
 
     return true;
   }
@@ -86,9 +101,17 @@ export class MemoryCards extends GameEngine {
     const m = move as MemoryCardsMove;
 
     const newCards = s.cards.map((c) => ({ ...c }));
+
+    if (s.lastAction === 'mismatch' && s.flippedCards.length === 2) {
+      newCards[s.flippedCards[0]].isFlipped = false;
+      newCards[s.flippedCards[1]].isFlipped = false;
+    }
+
     newCards[m.cardId].isFlipped = true;
 
-    const newFlipped = [...s.flippedCards, m.cardId];
+    const currentFlipped =
+      s.lastAction === 'mismatch' ? [] : [...s.flippedCards];
+    const newFlipped = [...currentFlipped, m.cardId];
 
     if (newFlipped.length < 2) {
       return {
@@ -96,6 +119,8 @@ export class MemoryCards extends GameEngine {
         cards: newCards,
         flippedCards: newFlipped,
         lastAction: 'flip',
+        turnLocked: false,
+        turnLockExpiry: 0,
       };
     }
 
@@ -127,20 +152,21 @@ export class MemoryCards extends GameEngine {
         winner,
         finished,
         lastAction: 'match',
+        turnLocked: false,
+        turnLockExpiry: 0,
       };
     }
-
-    card1.isFlipped = false;
-    card2.isFlipped = false;
 
     const nextPlayerIndex = (s.currentPlayerIndex + 1) % s.players.length;
 
     return {
       ...s,
       cards: newCards,
-      flippedCards: [],
+      flippedCards: newFlipped,
       currentPlayerIndex: nextPlayerIndex,
       lastAction: 'mismatch',
+      turnLocked: true,
+      turnLockExpiry: Date.now() + MISMATCH_LOCK_MS,
     };
   }
 
@@ -159,17 +185,17 @@ export class MemoryCards extends GameEngine {
     const s = state as MemoryCardsState;
 
     if (s.lastAction === 'flip') {
-      return 'flipped a card';
+      return 'bir kart açtı';
     }
 
     if (s.lastAction === 'match') {
       if (s.finished) {
-        return 'found the last pair! Game over!';
+        return 'son eşi buldu! Oyun bitti!';
       }
-      return 'found a matching pair! Goes again.';
+      return 'eşleşen bir çift buldu! Tekrar oynuyor.';
     }
 
-    return 'no match. Turn passes.';
+    return 'eşleşme yok. Sıra geçti.';
   }
 
   private _shuffle<T>(array: T[]): T[] {
@@ -181,7 +207,10 @@ export class MemoryCards extends GameEngine {
     return arr;
   }
 
-  private _determineWinner(scores: Record<string, number>, players: string[]): string | null {
+  private _determineWinner(
+    scores: Record<string, number>,
+    players: string[]
+  ): string | null {
     let maxScore = -1;
     let winners: string[] = [];
 
@@ -196,6 +225,6 @@ export class MemoryCards extends GameEngine {
     }
 
     if (winners.length === 1) return winners[0];
-    return null; // draw
+    return null;
   }
 }

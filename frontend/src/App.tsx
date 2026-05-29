@@ -10,6 +10,7 @@ import { CreateRoom } from './pages/CreateRoom';
 import { Room } from './pages/Room';
 import { OAuthCallback } from './pages/OAuthCallback';
 import { Profile } from './pages/Profile';
+import { Leaderboard } from './pages/Leaderboard';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -19,7 +20,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-base">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-6 h-6 border-2 border-border-default border-t-white rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-border-default border-t-accent-primary rounded-full animate-spin" />
           <p className="text-text-muted text-sm">Yükleniyor...</p>
         </div>
       </div>
@@ -40,7 +41,7 @@ function PublicRoute({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-base">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-6 h-6 border-2 border-border-default border-t-white rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-border-default border-t-accent-primary rounded-full animate-spin" />
           <p className="text-text-muted text-sm">Yükleniyor...</p>
         </div>
       </div>
@@ -102,6 +103,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Room />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leaderboard"
+        element={
+          <ProtectedRoute>
+            <Leaderboard />
           </ProtectedRoute>
         }
       />

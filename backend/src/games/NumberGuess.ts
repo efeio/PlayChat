@@ -125,10 +125,10 @@ export class NumberGuess extends GameEngine {
     const lastGuess = s.guesses[s.guesses.length - 1];
 
     if (lastGuess.hint === 'correct') {
-      return `guessed ${m.guess} — Correct! 🎉`;
+      return `${m.guess} tahmin etti — Doğru!`;
     }
 
-    const direction = lastGuess.hint === 'higher' ? '📈 Higher' : '📉 Lower';
-    return `guessed ${m.guess} — ${direction} (range: ${s.minRange}–${s.maxRange})`;
+    const direction = lastGuess.hint === 'higher' ? 'Daha yüksek' : 'Daha düşük';
+    return `${m.guess} tahmin etti — ${direction} (aralık: ${s.minRange}–${s.maxRange})`;
   }
 }

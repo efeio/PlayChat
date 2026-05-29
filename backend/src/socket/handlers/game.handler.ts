@@ -1,6 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import prisma from '../../config/prisma.js';
 import type { GameState } from '../../games/GameEngine.js';
+import { Wordle } from '../../games/Wordle.js';
 import {
   getActiveGames,
   getActiveGame,
@@ -9,11 +10,101 @@ import {
   updateAndPersistState,
   finishGame,
 } from '../../services/gameState.service.js';
+import { removeMemberFromRoom } from '../../services/room.service.js';
 import { GameStatus, GameType, MemberRole, PlayerRole, MessageType } from '@prisma/client';
+
+function sanitizeStateForClient(state: GameState, gameType: string): GameState {
+  const s = { ...state } as Record<string, unknown>;
+
+  if (gameType === 'HANGMAN') {
+    const { word, ...safe } = s as { word?: string; winner?: string | null; draw?: boolean; [k: string]: unknown };
+    const isFinished = !!safe.winner || !!safe.draw;
+
+    if (isFinished) {
+      return { ...safe, maskedWord: word, revealedWord: word } as unknown as GameState;
+    }
+
+    const maskedWord = word
+      ? word.split('').map((c) => {
+          const allGuessed = Object.values((safe.playerStates || {}) as Record<string, { guessedLetters: string[] }>)
+            .flatMap((ps) => ps.guessedLetters);
+          return allGuessed.includes(c) ? c : '_';
+        }).join('')
+      : '';
+    return { ...safe, maskedWord } as unknown as GameState;
+  }
+
+  if (gameType === 'MEMORY_CARDS') {
+    const memState = s as {
+      cards?: Array<{ id: number; symbol: string; isFlipped: boolean; isMatched: boolean }>;
+      finished?: boolean;
+      [k: string]: unknown;
+    };
+
+    if (memState.finished) {
+      return state;
+    }
+
+    if (memState.cards) {
+      const safeCards = memState.cards.map((card) => ({
+        id: card.id,
+        symbol: card.isFlipped || card.isMatched ? card.symbol : '?',
+        isFlipped: card.isFlipped,
+        isMatched: card.isMatched,
+      }));
+      return { ...s, cards: safeCards } as unknown as GameState;
+    }
+
+    return state;
+  }
+
+  if (gameType === 'WORDLE') {
+    const { targetWord, ...safe } = s as { targetWord?: string; [k: string]: unknown };
+    const finished = (s as { finished?: boolean }).finished;
+    if (finished) return { ...safe, targetWord } as unknown as GameState;
+    return safe as unknown as GameState;
+  }
+
+  if (gameType === 'NUMBER_GUESS') {
+    const { targetNumber, ...safe } = s as { targetNumber?: number; [k: string]: unknown };
+    const finished = (s as { finished?: boolean }).finished;
+    if (finished) return { ...safe, targetNumber } as unknown as GameState;
+    return safe as unknown as GameState;
+  }
+
+  if (gameType === 'ROCK_PAPER_SCISSORS') {
+    const choices = (s as { choices?: Record<string, string | null> }).choices;
+    const players = (s as { players?: string[] }).players || [];
+    if (choices && players.length === 2) {
+      const allChosen = players.every((p) => choices[p] !== null);
+      if (!allChosen) {
+        const maskedChoices: Record<string, string | null> = {};
+        for (const p of players) {
+          maskedChoices[p] = choices[p] !== null ? 'chosen' : null;
+        }
+        return { ...s, choices: maskedChoices } as unknown as GameState;
+      }
+    }
+  }
+
+  return state;
+}
 
 const startingGames = new Set<string>();
 
+const processingMoves = new Set<string>();
+
 const disconnectTimers = new Map<string, NodeJS.Timeout>();
+
+const GAME_NAME_TR: Record<string, string> = {
+  TIC_TAC_TOE: 'XOX',
+  CONNECT_FOUR: 'Connect Four',
+  WORDLE: 'Wordle',
+  MEMORY_CARDS: 'Hafıza Kartları',
+  HANGMAN: 'Adam Asmaca',
+  NUMBER_GUESS: 'Sayı Tahmin',
+  ROCK_PAPER_SCISSORS: 'Taş Kağıt Makas',
+};
 
 export function registerGameHandlers(io: Server, socket: Socket) {
   const userId = (socket.data as { userId: string }).userId;
@@ -54,10 +145,11 @@ export function registerGameHandlers(io: Server, socket: Socket) {
           return;
         }
 
+        const maxPlayers = gameType === 'MEMORY_CARDS' ? 4 : 2;
         const members = await prisma.roomMember.findMany({
           where: { roomId, role: { not: MemberRole.SPECTATOR } },
           include: { user: { select: { id: true, username: true, displayName: true } } },
-          take: 2,
+          take: maxPlayers,
         });
 
         if (members.length < 2) {
@@ -122,13 +214,13 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         io.to(roomId).emit('game:started', {
           gameId: game.id,
           gameType,
-          state: gameState,
+          state: sanitizeStateForClient(gameState, gameType),
           players: playersWithRoles,
         });
 
         await prisma.message.create({
           data: {
-            content: `Game started: ${gameType.replace(/_/g, ' ')}`,
+            content: `Oyun başladı: ${GAME_NAME_TR[gameType] || gameType}`,
             type: MessageType.GAME_LOG,
             userId,
             roomId,
@@ -153,6 +245,13 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         if (callback) callback({ error: 'Game not found' });
         return;
       }
+
+      const lockKey = `${gameId}:${userId}`;
+      if (processingMoves.has(lockKey)) {
+        if (callback) callback({});
+        return;
+      }
+      processingMoves.add(lockKey);
 
       const trustedRoomId = activeGame.roomId;
 
@@ -192,13 +291,19 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         return;
       }
 
+      if (engine instanceof Wordle && !engine.isValidDictionaryWord(move)) {
+        if (callback) callback({ error: 'invalid_word' });
+        return;
+      }
+
       const newState = engine.applyMove(state, move, userId);
 
+      activeGame.moveCount++;
       await updateAndPersistState(gameId, newState);
 
       io.to(trustedRoomId).emit('game:state', {
         gameId,
-        state: newState,
+        state: sanitizeStateForClient(newState, activeGame.gameType),
       });
 
       const logText = engine.getGameLog(move, userId, newState);
@@ -230,11 +335,15 @@ export function registerGameHandlers(io: Server, socket: Socket) {
           gameId,
           result,
           winnerId,
-          state: newState,
+          state: sanitizeStateForClient(newState, activeGame.gameType),
         });
 
+
+        const winnerName = winnerId
+          ? (await prisma.user.findUnique({ where: { id: winnerId }, select: { displayName: true } }))?.displayName || ''
+          : '';
         const endLogText =
-          result === 'draw' ? 'Game ended in a draw!' : `Game over! Winner determined.`;
+          result === 'draw' ? 'Oyun berabere bitti!' : `Oyun bitti! ${winnerName} kazandı.`;
         const endLogMsg = await prisma.message.create({
           data: {
             content: endLogText,
@@ -258,7 +367,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         });
         const gameTypeForStats = gameRecord?.type || GameType.GENERAL;
 
-        for (const gp of gamePlayers) {
+        const statsOps = gamePlayers.flatMap((gp) => {
           cancelDisconnectTimer(gp.userId);
 
           const statsUpdate = result === 'draw'
@@ -267,61 +376,103 @@ export function registerGameHandlers(io: Server, socket: Socket) {
               ? { gamesPlayed: { increment: 1 }, wins: { increment: 1 } }
               : { gamesPlayed: { increment: 1 }, losses: { increment: 1 } };
 
-          await prisma.userStats.upsert({
-            where: { userId_gameType: { userId: gp.userId, gameType: gameTypeForStats } },
-            update: statsUpdate,
-            create: { userId: gp.userId, gameType: gameTypeForStats, gamesPlayed: 1, wins: result !== 'draw' && gp.userId === winnerId ? 1 : 0, losses: result !== 'draw' && gp.userId !== winnerId ? 1 : 0, draws: result === 'draw' ? 1 : 0 },
-          });
+          const createData = {
+            gamesPlayed: 1,
+            wins: result !== 'draw' && gp.userId === winnerId ? 1 : 0,
+            losses: result !== 'draw' && gp.userId !== winnerId ? 1 : 0,
+            draws: result === 'draw' ? 1 : 0,
+          };
 
-          await prisma.userStats.upsert({
-            where: { userId_gameType: { userId: gp.userId, gameType: GameType.GENERAL } },
-            update: statsUpdate,
-            create: { userId: gp.userId, gameType: GameType.GENERAL, gamesPlayed: 1, wins: result !== 'draw' && gp.userId === winnerId ? 1 : 0, losses: result !== 'draw' && gp.userId !== winnerId ? 1 : 0, draws: result === 'draw' ? 1 : 0 },
-          });
-        }
+          return [
+            prisma.userStats.upsert({
+              where: { userId_gameType: { userId: gp.userId, gameType: gameTypeForStats } },
+              update: statsUpdate,
+              create: { userId: gp.userId, gameType: gameTypeForStats, ...createData },
+            }),
+            prisma.userStats.upsert({
+              where: { userId_gameType: { userId: gp.userId, gameType: GameType.GENERAL } },
+              update: statsUpdate,
+              create: { userId: gp.userId, gameType: GameType.GENERAL, ...createData },
+            }),
+          ];
+        });
+
+        await prisma.$transaction(statsOps);
       }
 
       if (callback) callback({});
     } catch {
       if (callback) callback({ error: 'Failed to process move' });
+    } finally {
+      const lk = `${data.gameId}:${userId}`;
+      processingMoves.delete(lk);
     }
   });
 
   socket.on('disconnect', async () => {
-    const sockets = await io.fetchSockets();
-    const isStillConnected = sockets.some(s => s.data.userId === userId && s.id !== socket.id);
-    if (isStillConnected) return;
-
     const activeGamesMap = getActiveGames();
+    const playerGames: [string, { roomId: string; state: GameState }][] = [];
+
     for (const [gameId, game] of activeGamesMap.entries()) {
       const state = game.state as { players?: string[] };
       if (state.players && state.players.includes(userId)) {
-        const timer = setTimeout(async () => {
-          const currentGame = getActiveGame(gameId);
-          if (!currentGame) return;
-
-          const s = currentGame.state as { players?: string[] };
-          const otherPlayer = s.players?.find((p) => p !== userId);
-
-          await finishGame(gameId, otherPlayer || null, currentGame.state);
-
-          await prisma.room.update({
-            where: { id: currentGame.roomId },
-            data: { currentGameId: null },
-          });
-
-          io.to(currentGame.roomId).emit('game:end', {
-            gameId,
-            result: 'win',
-            winnerId: otherPlayer,
-            reason: 'disconnect_timeout',
-          });
-
-          disconnectTimers.delete(userId);
-        }, 30000);
-
-        disconnectTimers.set(userId, timer);
+        playerGames.push([gameId, game]);
       }
+    }
+
+    if (playerGames.length === 0) return;
+
+    const roomIds = [...new Set(playerGames.map(([, g]) => g.roomId))];
+    let isStillConnected = false;
+    for (const roomId of roomIds) {
+      const sockets = await io.in(roomId).fetchSockets();
+      if (sockets.some(s => s.data.userId === userId && s.id !== socket.id)) {
+        isStillConnected = true;
+        break;
+      }
+    }
+    if (isStillConnected) return;
+
+    for (const [gameId, game] of playerGames) {
+      if (disconnectTimers.has(userId)) break;
+
+      const timer = setTimeout(async () => {
+        const currentGame = getActiveGame(gameId);
+        if (!currentGame) {
+          disconnectTimers.delete(userId);
+          return;
+        }
+
+        const s = currentGame.state as { players?: string[] };
+        const otherPlayer = s.players?.find((p) => p !== userId);
+
+        await finishGame(gameId, otherPlayer || null, currentGame.state);
+
+        await prisma.room.update({
+          where: { id: currentGame.roomId },
+          data: { currentGameId: null },
+        });
+
+        io.to(currentGame.roomId).emit('game:end', {
+          gameId,
+          result: 'win',
+          winnerId: otherPlayer,
+          reason: 'disconnect_timeout',
+          state: sanitizeStateForClient(currentGame.state, currentGame.gameType),
+        });
+
+        await removeMemberFromRoom(currentGame.roomId, userId);
+
+        const updatedMembers = await prisma.roomMember.findMany({
+          where: { roomId: currentGame.roomId },
+          include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+        });
+        io.to(currentGame.roomId).emit('room:updated', { id: currentGame.roomId, members: updatedMembers });
+
+        disconnectTimers.delete(userId);
+      }, 30000);
+
+      disconnectTimers.set(userId, timer);
     }
   });
 }
@@ -356,6 +507,44 @@ export async function handlePlayerLeftRoom(io: Server, userId: string, roomId: s
         winnerId: otherPlayer,
         reason: 'player_left',
       });
+
+      const gameRecord = await prisma.game.findUnique({
+        where: { id: gameId },
+        select: { type: true },
+      });
+      const gameTypeForStats = gameRecord?.type || GameType.GENERAL;
+
+      const gamePlayers = await prisma.gamePlayer.findMany({
+        where: { gameId, role: PlayerRole.PLAYER },
+      });
+
+      const statsOps = gamePlayers.flatMap((gp) => {
+        const statsUpdate = gp.userId === otherPlayer
+          ? { gamesPlayed: { increment: 1 }, wins: { increment: 1 } }
+          : { gamesPlayed: { increment: 1 }, losses: { increment: 1 } };
+
+        const createData = {
+          gamesPlayed: 1,
+          wins: gp.userId === otherPlayer ? 1 : 0,
+          losses: gp.userId !== otherPlayer ? 1 : 0,
+          draws: 0,
+        };
+
+        return [
+          prisma.userStats.upsert({
+            where: { userId_gameType: { userId: gp.userId, gameType: gameTypeForStats } },
+            update: statsUpdate,
+            create: { userId: gp.userId, gameType: gameTypeForStats, ...createData },
+          }),
+          prisma.userStats.upsert({
+            where: { userId_gameType: { userId: gp.userId, gameType: GameType.GENERAL } },
+            update: statsUpdate,
+            create: { userId: gp.userId, gameType: GameType.GENERAL, ...createData },
+          }),
+        ];
+      });
+
+      await prisma.$transaction(statsOps);
 
       cancelDisconnectTimer(userId);
     }

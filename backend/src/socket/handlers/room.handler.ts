@@ -1,11 +1,13 @@
 import type { Server, Socket } from 'socket.io';
+import bcrypt from 'bcrypt';
 import prisma from '../../config/prisma.js';
 import {
   addMemberToRoom,
   removeMemberFromRoom,
+  promoteNextOwner,
 } from '../../services/room.service.js';
 import { handlePlayerLeftRoom } from './game.handler.js';
-import { getActiveGame } from '../../services/gameState.service.js';
+import { getActiveGame, getActiveGames, finishGame } from '../../services/gameState.service.js';
 import {
   trackSocketRoom,
   untrackSocketRoom,
@@ -53,6 +55,7 @@ interface RoomStateResponse {
       displayName: string;
       role: string;
       symbol: string | null;
+      playerIndex: number;
     }>;
   } | null;
   userRole: string;
@@ -119,37 +122,22 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
 
       if (activeGameRecord) {
         const memoryGame = getActiveGame(activeGameRecord.id);
+        const gameState = memoryGame ? memoryGame.state : activeGameRecord.state as GameState;
 
-        if (memoryGame) {
-          activeGame = {
-            gameId: activeGameRecord.id,
-            gameType: activeGameRecord.type,
-            status: activeGameRecord.status,
-            state: memoryGame.state,
-            players: activeGameRecord.players.map((p) => ({
-              userId: p.userId,
-              username: p.user.username,
-              displayName: p.user.displayName,
-              role: p.role,
-              symbol: p.symbol,
-            })),
-          };
-        } else {
-          const state = activeGameRecord.state as GameState;
-          activeGame = {
-            gameId: activeGameRecord.id,
-            gameType: activeGameRecord.type,
-            status: activeGameRecord.status,
-            state,
-            players: activeGameRecord.players.map((p) => ({
-              userId: p.userId,
-              username: p.user.username,
-              displayName: p.user.displayName,
-              role: p.role,
-              symbol: p.symbol,
-            })),
-          };
-        }
+        activeGame = {
+          gameId: activeGameRecord.id,
+          gameType: activeGameRecord.type,
+          status: activeGameRecord.status,
+          state: gameState,
+          players: activeGameRecord.players.map((p, i) => ({
+            userId: p.userId,
+            username: p.user.username,
+            displayName: p.user.displayName,
+            role: p.role,
+            symbol: p.symbol,
+            playerIndex: i,
+          })),
+        };
       }
 
       const socketsInRoom = await io.in(roomId).fetchSockets();
@@ -215,12 +203,16 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
 
       const existingMember = room.members.find((m) => m.userId === userId);
 
+      if (!existingMember && room.members.length >= room.maxMembers) {
+        if (callback) callback({ error: 'Room is full' });
+        return;
+      }
+
       if (room.type === 'PRIVATE' && !existingMember) {
         if (!password) {
           if (callback) callback({ error: 'Password required for private room' });
           return;
         }
-        const bcrypt = await import('bcrypt');
         const valid = room.passwordHash ? await bcrypt.compare(password, room.passwordHash) : false;
         if (!valid) {
           if (callback) callback({ error: 'Invalid room password' });
@@ -248,15 +240,11 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         role,
       });
 
-      const updatedRoom = await prisma.room.findUnique({
-        where: { id: roomId },
-        include: {
-          members: {
-            include: { user: { select: { id: true, username: true, displayName: true } } },
-          },
-        },
+      const updatedMembers = await prisma.roomMember.findMany({
+        where: { roomId },
+        include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
       });
-      io.to(roomId).emit('room:updated', updatedRoom);
+      io.to(roomId).emit('room:updated', { id: roomId, members: updatedMembers });
 
       if (callback) callback({});
     } catch {
@@ -277,6 +265,13 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
     if (!hasOtherSockets) {
       socket.to(roomId).emit('room:user_left', { userId, username });
       await handlePlayerLeftRoom(io, userId, roomId);
+      await removeMemberFromRoom(roomId, userId);
+
+      const updatedMembers = await prisma.roomMember.findMany({
+        where: { roomId },
+        include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+      });
+      io.to(roomId).emit('room:updated', { id: roomId, members: updatedMembers });
     }
 
     await evaluateRoomOnLeave(roomId);
@@ -301,6 +296,7 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
       for (const s of targetSockets) {
         if ((s.data as { userId: string }).userId === targetUserId) {
           s.leave(roomId);
+          untrackSocketRoom(s.id);
           s.emit('room:kicked', { roomId });
         }
       }
@@ -326,6 +322,13 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
         return;
       }
 
+      const activeGamesMap = getActiveGames();
+      for (const [gameId, game] of activeGamesMap.entries()) {
+        if (game.roomId === roomId) {
+          await finishGame(gameId, null, game.state);
+        }
+      }
+
       await prisma.room.update({
         where: { id: roomId },
         data: { isActive: false, currentGameId: null },
@@ -344,6 +347,58 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
       if (callback) callback({});
     } catch {
       if (callback) callback({ error: 'Failed to close room' });
+    }
+  });
+
+  socket.on('room:claim_host', async (data: { roomId: string }, callback?: (res: { error?: string }) => void) => {
+    try {
+      const { roomId } = data;
+
+      const membership = await prisma.roomMember.findFirst({
+        where: { userId, roomId },
+      });
+
+      if (!membership) {
+        if (callback) callback({ error: 'Not a member of this room' });
+        return;
+      }
+
+      const existingOwner = await prisma.roomMember.findFirst({
+        where: { roomId, role: MemberRole.OWNER },
+        select: { userId: true },
+      });
+
+      if (existingOwner) {
+        const ownerSockets = await io.in(roomId).fetchSockets();
+        const ownerOnline = ownerSockets.some(
+          (s) => (s.data as { userId: string }).userId === existingOwner.userId
+        );
+
+        if (ownerOnline) {
+          if (callback) callback({ error: 'Room already has an active owner' });
+          return;
+        }
+
+        await prisma.roomMember.updateMany({
+          where: { roomId, role: MemberRole.OWNER },
+          data: { role: MemberRole.MEMBER },
+        });
+      }
+
+      await prisma.roomMember.update({
+        where: { id: membership.id },
+        data: { role: MemberRole.OWNER },
+      });
+
+      const updatedMembers = await prisma.roomMember.findMany({
+        where: { roomId },
+        include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+      });
+      io.to(roomId).emit('room:updated', { id: roomId, members: updatedMembers });
+
+      if (callback) callback({});
+    } catch {
+      if (callback) callback({ error: 'Failed to claim host' });
     }
   });
 

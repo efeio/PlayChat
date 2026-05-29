@@ -13,6 +13,7 @@ const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
   'auth:forgot-password': { maxRequests: 3, windowSeconds: 3600 },
   'rooms:create': { maxRequests: 10, windowSeconds: 60 },
   'rooms:list': { maxRequests: 60, windowSeconds: 60 },
+  'rooms:verify-password': { maxRequests: 5, windowSeconds: 300 },
   default: { maxRequests: 100, windowSeconds: 60 },
 };
 

@@ -316,6 +316,7 @@ describe('room:get_state handler', () => {
       roomId,
       gameType: 'TIC_TAC_TOE',
       lastUpdated: Date.now(),
+      moveCount: 0,
     });
 
     (mockIo.in as any).mockReturnValue({

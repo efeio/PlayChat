@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -27,6 +28,11 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex bg-bg-base relative overflow-hidden">
+      {/* Theme toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Animated background orbs */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-accent-primary/10 blur-[120px] animate-float" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-accent-secondary/8 blur-[100px] animate-float" style={{ animationDelay: '1.5s' }} />
@@ -50,7 +56,7 @@ export function Login() {
             <div className="w-12 h-[2px] bg-gradient-to-r from-accent-primary to-transparent" />
           </div>
 
-          <h2 className="text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <h2 className="text-5xl xl:text-6xl font-bold text-text-primary leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'var(--font-family-display)' }}>
             Oyna.<br />
             <span className="text-gradient">Sohbet et.</span><br />
             <span className="text-text-secondary">Birlikte kazan.</span>
@@ -62,11 +68,15 @@ export function Login() {
 
           {/* Game icons showcase */}
           <div className="flex items-center gap-4 mt-12">
-            {['⊞', '◉', '✊', '✎'].map((icon, i) => (
+            {[
+              <svg key="ttt" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>,
+              <svg key="c4" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="8" cy="8" r="2.5"/><circle cx="16" cy="8" r="2.5"/><circle cx="8" cy="16" r="2.5"/><circle cx="16" cy="16" r="2.5"/></svg>,
+              <svg key="rps" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 12.5V10a2 2 0 0 0-2-2 2 2 0 0 0-2 2v1.4"/><path d="M14 11V9a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V5a2 2 0 0 0-2-2 2 2 0 0 0-2 2v9"/><path d="M18 12a2 2 0 0 1 2 2v1a8 8 0 0 1-8 8h-2a8 8 0 0 1-4-1.5"/></svg>,
+              <svg key="wordle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="5" height="5" rx="1"/><rect x="9.5" y="5" width="5" height="5" rx="1"/><rect x="16" y="5" width="5" height="5" rx="1"/><rect x="3" y="14" width="5" height="5" rx="1"/><rect x="9.5" y="14" width="5" height="5" rx="1"/><rect x="16" y="14" width="5" height="5" rx="1"/></svg>,
+            ].map((icon, i) => (
               <div
                 key={i}
-                className="w-12 h-12 rounded-xl bg-bg-surface border border-border-default flex items-center justify-center text-xl text-text-muted hover:text-accent-primary hover:border-accent-primary/30 hover:scale-110 transition-all duration-300 cursor-default"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="w-12 h-12 rounded-xl bg-bg-surface border border-border-default flex items-center justify-center text-text-muted hover:text-accent-primary hover:border-accent-primary/30 hover:scale-110 transition-all duration-300 cursor-default"
               >
                 {icon}
               </div>
@@ -94,7 +104,7 @@ export function Login() {
             {/* Top glow line */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent-primary/50 to-transparent" />
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: 'var(--font-family-display)' }}>
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2 tracking-tight" style={{ fontFamily: 'var(--font-family-display)' }}>
               Tekrar hoş geldin
             </h1>
             <p className="text-text-secondary text-sm mb-8">

@@ -15,17 +15,17 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold h-[44px] px-6 transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed relative overflow-hidden';
+    'inline-flex items-center justify-center gap-2 rounded-2xl text-sm font-bold h-[46px] px-6 transition-all duration-250 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed relative overflow-hidden';
 
   const variants = {
     primary:
-      'bg-gradient-to-r from-accent-primary to-indigo-500 text-white border-none shadow-[0_4px_16px_rgba(99,102,241,0.4)] hover:shadow-[0_8px_25px_rgba(99,102,241,0.6)] hover:translate-y-[-1px] active:translate-y-0',
+      'bg-gradient-to-r from-accent-primary via-accent-primary/90 to-accent-primary text-text-inverse border-none shadow-[0_4px_20px_var(--glow-primary)] hover:shadow-[0_8px_30px_var(--glow-primary)] hover:translate-y-[-2px] active:translate-y-0 active:scale-[0.98]',
     outlined:
-      'bg-transparent text-text-secondary border border-accent-primary/30 hover:border-accent-primary/70 hover:text-white hover:bg-accent-primary/5',
+      'bg-transparent text-text-secondary border border-accent-primary/25 hover:border-accent-primary/60 hover:text-text-primary hover:bg-accent-primary/5 hover:shadow-[0_0_20px_rgba(139,92,246,0.1)]',
     ghost:
-      'bg-transparent text-text-muted border-none hover:text-text-primary hover:bg-white/6',
+      'bg-transparent text-text-muted border-none hover:text-text-primary hover:bg-accent-primary/5',
     danger:
-      'bg-transparent text-text-muted border border-accent-danger/25 hover:border-accent-danger hover:text-accent-danger hover:bg-accent-danger/5',
+      'bg-transparent text-text-muted border border-accent-danger/20 hover:border-accent-danger hover:text-accent-danger hover:bg-accent-danger/5 hover:shadow-[0_0_20px_rgba(255,92,124,0.1)]',
   };
 
   const width = fullWidth ? 'w-full' : '';

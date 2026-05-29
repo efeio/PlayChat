@@ -1,10 +1,4 @@
 node_modules/
 .env
+dist/
 .DS_Store
-.claude/
-frontend/dist/
-frontend/tsconfig.tsbuildinfo
-backend/prisma/dev.db
-playwright-report/
-test-results/
-*.log

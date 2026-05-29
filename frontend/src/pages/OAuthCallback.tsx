@@ -8,7 +8,8 @@ export function OAuthCallback() {
   const { loginWithToken } = useAuth();
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const token = searchParams.get('token')
+      || new URLSearchParams(window.location.hash.slice(1)).get('token');
     if (token) {
       loginWithToken(token);
       navigate('/dashboard', { replace: true });

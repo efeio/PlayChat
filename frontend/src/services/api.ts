@@ -1,4 +1,11 @@
-const API_URL = import.meta.env.VITE_API_URL || '';
+function resolveApiUrl(): string {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (import.meta.env.DEV) return '';
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:3001`;
+}
+
+const API_URL = resolveApiUrl();
 
 interface FetchOptions extends RequestInit {
   token?: string;
@@ -31,20 +38,22 @@ async function request<T>(endpoint: string, options: FetchOptions = {}): Promise
 }
 
 export const api = {
-  get: <T>(endpoint: string, token?: string) =>
-    request<T>(endpoint, { method: 'GET', token }),
+  get: <T>(endpoint: string, token?: string, signal?: AbortSignal) =>
+    request<T>(endpoint, { method: 'GET', token, signal }),
 
-  post: <T>(endpoint: string, body: unknown, token?: string) =>
+  post: <T>(endpoint: string, body: unknown, token?: string, signal?: AbortSignal) =>
     request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(body),
       token,
+      signal,
     }),
 
-  put: <T>(endpoint: string, body?: unknown, token?: string) =>
+  put: <T>(endpoint: string, body?: unknown, token?: string, signal?: AbortSignal) =>
     request<T>(endpoint, {
       method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
       token,
+      signal,
     }),
 };

@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import prisma from '../config/prisma.js';
 import { GameEngine, type GameState } from '../games/GameEngine.js';
@@ -28,6 +29,7 @@ export interface ActiveGameEntry {
   roomId: string;
   gameType: string;
   lastUpdated: number;
+  moveCount: number;
 }
 
 const activeGames = new Map<string, ActiveGameEntry>();
@@ -71,6 +73,7 @@ export function registerActiveGame(
     roomId,
     gameType,
     lastUpdated: Date.now(),
+    moveCount: 0,
   });
 }
 
@@ -189,6 +192,7 @@ export async function rehydrateActiveGames(): Promise<number> {
       roomId: game.roomId,
       gameType: game.type,
       lastUpdated: Date.now(),
+      moveCount: 0,
     });
 
     rehydratedCount++;
@@ -235,7 +239,7 @@ function ensureSnapshotDir(): void {
   }
 }
 
-function writeSnapshot(gameId: string, entry: ActiveGameEntry): void {
+async function writeSnapshot(gameId: string, entry: ActiveGameEntry): Promise<void> {
   try {
     ensureSnapshotDir();
 
@@ -250,7 +254,7 @@ function writeSnapshot(gameId: string, entry: ActiveGameEntry): void {
     };
 
     const filePath = join(SNAPSHOT_DIR, `${gameId}.json`);
-    writeFileSync(filePath, JSON.stringify(snapshot), 'utf-8');
+    await writeFile(filePath, JSON.stringify(snapshot), 'utf-8');
   } catch {
     // Snapshot write failure is non-critical
   }
@@ -280,10 +284,11 @@ function removeSnapshot(gameId: string): void {
   }
 }
 
-function writeAllSnapshots(): void {
-  for (const [gameId, entry] of activeGames.entries()) {
-    writeSnapshot(gameId, entry);
-  }
+async function writeAllSnapshots(): Promise<void> {
+  const writes = Array.from(activeGames.entries()).map(([gameId, entry]) =>
+    writeSnapshot(gameId, entry)
+  );
+  await Promise.allSettled(writes);
 }
 
 export function startSnapshotInterval(): void {
@@ -292,17 +297,17 @@ export function startSnapshotInterval(): void {
   ensureSnapshotDir();
 
   snapshotIntervalHandle = setInterval(() => {
-    writeAllSnapshots();
+    writeAllSnapshots().catch(() => {});
   }, SNAPSHOT_INTERVAL_MS);
 }
 
-export function stopSnapshotInterval(): void {
+export async function stopSnapshotInterval(): Promise<void> {
   if (snapshotIntervalHandle) {
     clearInterval(snapshotIntervalHandle);
     snapshotIntervalHandle = null;
   }
 
-  writeAllSnapshots();
+  await writeAllSnapshots();
 }
 
 export function clearAllSnapshots(): void {

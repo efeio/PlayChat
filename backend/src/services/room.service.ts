@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import prisma from '../config/prisma.js';
 import { RoomType, MemberRole, GameStatus } from '@prisma/client';
 
@@ -13,7 +14,6 @@ export interface CreateRoomInput {
 export async function createRoom(input: CreateRoomInput) {
   let passwordHash: string | undefined;
   if (input.type === RoomType.PRIVATE && input.password) {
-    const bcrypt = await import('bcrypt');
     passwordHash = await bcrypt.hash(input.password, 10);
   }
 
@@ -67,15 +67,14 @@ export async function listRooms() {
 const membershipLocks = new Map<string, Promise<void>>();
 
 async function acquireLock(key: string): Promise<() => void> {
-  let release!: () => void;
-  const newLock = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-
   while (membershipLocks.has(key)) {
     await membershipLocks.get(key);
   }
 
+  let release!: () => void;
+  const newLock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   membershipLocks.set(key, newLock);
 
   return () => {
@@ -126,9 +125,42 @@ export async function addMemberToRoom(
 }
 
 export async function removeMemberFromRoom(roomId: string, userId: string) {
-  return prisma.roomMember.deleteMany({
+  const departing = await prisma.roomMember.findFirst({
+    where: { userId, roomId },
+    select: { role: true },
+  });
+
+  await prisma.roomMember.deleteMany({
     where: { userId, roomId },
   });
+
+  if (departing?.role === MemberRole.OWNER) {
+    await promoteNextOwner(roomId);
+  }
+}
+
+export async function promoteNextOwner(roomId: string): Promise<string | null> {
+  const hasOwner = await prisma.roomMember.findFirst({
+    where: { roomId, role: MemberRole.OWNER },
+    select: { userId: true },
+  });
+
+  if (hasOwner) return hasOwner.userId;
+
+  const oldest = await prisma.roomMember.findFirst({
+    where: { roomId },
+    orderBy: { joinedAt: 'asc' },
+    select: { id: true, userId: true },
+  });
+
+  if (!oldest) return null;
+
+  await prisma.roomMember.update({
+    where: { id: oldest.id },
+    data: { role: MemberRole.OWNER },
+  });
+
+  return oldest.userId;
 }
 
 export async function getUserCurrentRoom(userId: string) {
@@ -149,6 +181,5 @@ export async function verifyRoomPassword(roomId: string, password: string): Prom
     return false;
   }
 
-  const bcrypt = await import('bcrypt');
   return bcrypt.compare(password, room.passwordHash);
 }

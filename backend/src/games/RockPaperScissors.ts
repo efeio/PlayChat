@@ -9,7 +9,7 @@ interface RPSState extends GameState {
   scores: Record<string, number>;
   lastRoundResult: string | null;
   winner: string | null;
-  maxRounds: number;
+  winsNeeded: number;
 }
 
 interface RPSMove extends Move {
@@ -33,7 +33,7 @@ export class RockPaperScissors extends GameEngine {
       scores,
       lastRoundResult: null,
       winner: null,
-      maxRounds: 3,
+      winsNeeded: 3,
     };
   }
 
@@ -89,13 +89,8 @@ export class RockPaperScissors extends GameEngine {
     const newRound = s.round + 1;
     let winner: string | null = null;
 
-    if (newRound > s.maxRounds) {
-      const s1 = newScores[p1] || 0;
-      const s2 = newScores[p2] || 0;
-      if (s1 > s2) winner = p1;
-      else if (s2 > s1) winner = p2;
-      else winner = null;
-    }
+    if (newScores[p1] >= s.winsNeeded) winner = p1;
+    else if (newScores[p2] >= s.winsNeeded) winner = p2;
 
     return {
       ...s,
@@ -109,9 +104,7 @@ export class RockPaperScissors extends GameEngine {
 
   checkResult(state: GameState): 'ongoing' | 'win' | 'draw' {
     const s = state as RPSState;
-    if (s.round > s.maxRounds) {
-      return s.winner ? 'win' : 'draw';
-    }
+    if (s.winner) return 'win';
     return 'ongoing';
   }
 
@@ -122,8 +115,8 @@ export class RockPaperScissors extends GameEngine {
   getGameLog(_move: Move, _userId: string, state: GameState): string {
     const s = state as RPSState;
     if (s.lastRoundResult) {
-      return `made their choice. Round ${s.round - 1} completed!`;
+      return `seçimini yaptı. ${s.round - 1}. tur tamamlandı!`;
     }
-    return 'made their choice';
+    return 'seçimini yaptı';
   }
 }

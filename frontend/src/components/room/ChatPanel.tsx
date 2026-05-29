@@ -159,7 +159,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
     requestAnimationFrame(() => {
       scrollToBottom('instant');
     });
-  }, [roomId, scrollToBottom, clearOptimistic, messages.length]);
+  }, [roomId, scrollToBottom, clearOptimistic]);
 
   /**
    * Scroll position preservation for historical message loading.
@@ -183,7 +183,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
     }
 
     previousScrollHeightRef.current = currentScrollHeight;
-  });
+  }, [messages.length]);
 
   /**
    * Sends a message via socket with optimistic rendering.
@@ -329,9 +329,9 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
           </span>
         )}
         {isConnected && !isAuthenticated && (
-          <span className="text-[10px] text-amber-400 font-medium flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Connecting
+          <span className="text-[10px] text-accent-warm font-medium flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent-warm/10 border border-accent-warm/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-warm animate-pulse" />
+            Bağlanıyor
           </span>
         )}
       </div>
@@ -380,7 +380,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
                 <div className="flex justify-end gap-2 mt-1 pr-1">
                   <button
                     onClick={() => handleRetry((msg as OptimisticMessage)._clientId)}
-                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                    className="text-xs text-accent-warm hover:text-accent-warm/80 transition-colors cursor-pointer"
                   >
                     Tekrar dene
                   </button>
@@ -405,7 +405,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
         <div className="flex justify-center py-1 shrink-0">
           <button
             onClick={() => scrollToBottom('smooth')}
-            className="px-4 py-1.5 bg-indigo-600/90 hover:bg-indigo-500 text-white text-xs font-medium rounded-full shadow-lg transition-all duration-200 cursor-pointer backdrop-blur-sm border border-indigo-400/20"
+            className="px-4 py-1.5 bg-accent-primary/90 hover:bg-accent-primary text-text-inverse text-xs font-medium rounded-full shadow-lg transition-all duration-200 cursor-pointer backdrop-blur-sm border border-accent-primary/20"
           >
             {unreadCount > 0
               ? `${unreadCount} yeni mesaj ↓`
@@ -427,7 +427,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
                 : 'Çevrimdışı — mesajlar sıraya alınacak'
             }
             maxLength={MAX_MESSAGE_LENGTH}
-            className="w-full bg-bg-base/60 border border-border-default rounded-xl pl-4 pr-12 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent-primary/40 focus:ring-2 focus:ring-accent-primary/10 transition-all duration-200"
+            className="w-full bg-bg-base/60 border border-border-default rounded-xl pl-4 pr-12 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-primary/40 focus:ring-2 focus:ring-accent-primary/10 transition-all duration-200"
           />
 
           {/* Character count indicator */}
@@ -437,7 +437,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
                 remainingChars < 0
                   ? 'text-status-error'
                   : remainingChars < 100
-                  ? 'text-amber-400'
+                  ? 'text-accent-warm'
                   : 'text-text-muted'
               }`}
             >
@@ -449,7 +449,8 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
           <button
             onClick={handleSend}
             disabled={!input.trim() || input.length > MAX_MESSAGE_LENGTH}
-            className="absolute right-1.5 w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-white hover:bg-accent-primary/20 disabled:opacity-30 disabled:hover:text-text-muted disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-1.5 w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-accent-primary/20 disabled:opacity-30 disabled:hover:text-text-muted disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+            aria-label="Mesaj gönder"
           >
             <svg
               width="16"
@@ -470,8 +471,7 @@ export function ChatPanel({ roomId, messages }: ChatPanelProps) {
         {/* Offline queue indicator */}
         {!isConnected && getPendingMessages(roomId).length > 0 && (
           <p className="text-xs text-text-muted mt-2 pl-2">
-            {getPendingMessages(roomId).length} message
-            {getPendingMessages(roomId).length > 1 ? 's' : ''} queued — will send when online
+            {getPendingMessages(roomId).length} mesaj sırada — çevrimiçi olunca gönderilecek
           </p>
         )}
       </div>

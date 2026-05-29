@@ -78,6 +78,8 @@ model User {
   passwordResetToken     String?
   passwordResetExpires   DateTime?
 
+  @@index([emailVerifyToken])
+  @@index([passwordResetToken])
   @@map("users")
 }
 
@@ -198,6 +200,6 @@ model Notification {
   sender User @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
   room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  @@index([userId, isRead])
+  @@index([userId, isRead, createdAt])
   @@map("notifications")
 }

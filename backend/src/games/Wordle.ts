@@ -3,35 +3,81 @@ import { GameEngine, type GameState, type Move } from './GameEngine.js';
 const WORD_LENGTH = 5;
 const MAX_GUESSES = 6;
 
-const WORD_LIST: string[] = [
-  'apple', 'beach', 'brain', 'brave', 'chair', 'charm', 'chess', 'climb',
-  'cloud', 'crane', 'dance', 'dream', 'drive', 'earth', 'flame', 'flash',
-  'float', 'ghost', 'globe', 'grace', 'grain', 'grape', 'green', 'grind',
-  'guard', 'heart', 'house', 'human', 'juice', 'knock', 'laser', 'lemon',
-  'light', 'lunar', 'magic', 'maple', 'marsh', 'medal', 'metal', 'model',
-  'mount', 'music', 'nerve', 'noble', 'ocean', 'orbit', 'paint', 'panel',
-  'pearl', 'phase', 'piano', 'pilot', 'pixel', 'plane', 'plant', 'plaza',
-  'plumb', 'power', 'prime', 'prize', 'proof', 'proud', 'queen', 'quiet',
-  'radar', 'raise', 'ranch', 'rapid', 'reach', 'realm', 'reign', 'river',
-  'robot', 'round', 'royal', 'scale', 'scene', 'scope', 'score', 'scout',
-  'shade', 'shake', 'shape', 'share', 'shark', 'sharp', 'shelf', 'shell',
-  'shift', 'shine', 'sight', 'sigma', 'skill', 'slate', 'sleep', 'slice',
-  'smart', 'smile', 'smoke', 'solid', 'solve', 'sound', 'space', 'spare',
-  'spark', 'speak', 'speed', 'spice', 'spike', 'spine', 'squad', 'stack',
-  'stage', 'stake', 'stand', 'stare', 'start', 'state', 'steal', 'steam',
-  'steel', 'steep', 'stern', 'stick', 'stock', 'stone', 'store', 'storm',
-  'story', 'stove', 'strap', 'straw', 'strip', 'study', 'stuff', 'style',
-  'sugar', 'suite', 'surge', 'swamp', 'sweep', 'sweet', 'swing', 'sword',
-  'table', 'theft', 'theme', 'thick', 'thing', 'think', 'thorn', 'those',
-  'thumb', 'tiger', 'tired', 'title', 'toast', 'token', 'total', 'touch',
-  'tower', 'trace', 'track', 'trade', 'trail', 'train', 'trait', 'trash',
-  'treat', 'trend', 'trial', 'tribe', 'trick', 'troop', 'truck', 'truly',
-  'trump', 'trunk', 'trust', 'truth', 'twist', 'ultra', 'under', 'unity',
-  'upper', 'upset', 'urban', 'usage', 'valid', 'value', 'vapor', 'vault',
-  'verse', 'vigor', 'vinyl', 'viral', 'virus', 'visit', 'vital', 'vivid',
-  'vocal', 'voice', 'voter', 'watch', 'water', 'whale', 'wheat', 'wheel',
-  'whole', 'width', 'world', 'wound', 'wrist', 'write', 'yacht', 'young',
+function turkishUpper(str: string): string {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/i/g, 'İ')
+    .replace(/ı/g, 'I')
+    .toUpperCase();
+}
+
+function turkishLower(str: string): string {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'ı')
+    .toLowerCase();
+}
+
+const TARGET_WORDS: string[] = [
+  'ADRES', 'AHLAK', 'AKŞAM', 'ALTIN', 'ANLAM', 'ARABA', 'ASKER',
+  'ASLAN', 'ATLAS', 'AYRAN', 'BAHÇE', 'BALIK', 'BARIŞ', 'BAŞKA',
+  'BEYAZ', 'BİLGİ', 'BÖCEK', 'BOYUT', 'BUHAR', 'BULUT', 'BÜYÜK',
+  'CADDE', 'ÇARŞI', 'ÇELİK', 'ÇEVRE', 'ÇİÇEK', 'ÇORAP', 'DALGA',
+  'DARBE', 'DENİZ', 'DERİN', 'DOĞAL', 'DOLAP', 'DORUK', 'DÖNÜŞ',
+  'DÜNYA', 'DUVAR', 'EKMEK', 'ELMAS', 'ENGEL', 'ERKEN', 'EVREN',
+  'FENER', 'FİDAN', 'GARIP', 'GİDİŞ', 'GÖLGE', 'GÖREV', 'GÜÇLÜ',
+  'GÜNAH', 'GÜNEŞ', 'GÜVEN', 'GÜZEL', 'HAFTA', 'HAKİM', 'HALAT',
+  'HASTA', 'HAYAT', 'HAZIR', 'HUKUK', 'İFADE', 'İLERİ', 'İNANÇ',
+  'İNSAN', 'İSTEK', 'İŞLEM', 'KABİN', 'KABUL', 'KADIN', 'KAFES',
+  'KALEM', 'KANAT', 'KAPAK', 'KARGO', 'KASIM', 'KAŞIK', 'KAVGA',
+  'KAYAK', 'KAYIP', 'KAZAK', 'KELAM', 'KENDİ', 'KESER', 'KOLAY',
+  'KOMŞU', 'KORKU', 'KÖPRÜ', 'KÖYLÜ', 'KUMAŞ', 'KÜÇÜK', 'KÜREK',
+  'LAMBA', 'LİMAN', 'MAKAS', 'MASAL', 'MELEK', 'MERAK', 'METAL',
+  'MEYVE', 'MOTOR', 'MUTLU', 'MÜDÜR', 'NEFES', 'NEHİR', 'NİŞAN',
+  'NOKTA', 'NOTER', 'NÜFUS', 'OKUMA', 'ORMAN', 'ORTAM', 'ÖĞLEN',
+  'ÖZGÜR', 'ÖZLEM', 'PAKET', 'PAMUK', 'PANEL', 'PARÇA', 'PASTA',
+  'PAZAR', 'PERDE', 'PİLOT', 'PROJE', 'RADAR', 'RADYO', 'RAHAT',
+  'RAPOR', 'REÇEL', 'ROBOT', 'ROMAN', 'SABAH', 'SAÇMA', 'SAHİL',
+  'SAHNE', 'SAKİN', 'SALON', 'SAMAN', 'SANAT', 'SARAY', 'SAVAŞ',
+  'SEBEP', 'SEBZE', 'SEFER', 'SEVGİ', 'SİLAH', 'SINAV', 'SINIF',
+  'SOFRA', 'SOKAK', 'SONRA', 'SONUÇ', 'SÜREÇ', 'ŞARAP', 'ŞEHİR',
+  'ŞEKER', 'TABAK', 'TAKİM', 'TAKİP', 'TALEP', 'TAMAM', 'TARAF',
+  'TARLA', 'TAVUK', 'TEKER', 'TEMEL', 'TERZİ', 'TESİS', 'TOPLU',
+  'TOPUK', 'TUHAF', 'TURNE', 'TUZAK', 'TUZLU', 'UYARI', 'UYGUN',
+  'UZMAN', 'ÜSTÜN', 'VAKİT', 'VAPUR', 'VATAN', 'VEKİL', 'VÜCUT',
+  'YABAN', 'YAKIN', 'YALAN', 'YARIM', 'YASAL', 'YAŞAM', 'YATAK',
+  'YAVAŞ', 'YAZAR', 'YERLİ', 'YETKİ', 'YOĞUN', 'YOKSA', 'YORUM',
+  'YÜZDE', 'YÜZME', 'ZAMAN', 'ZAYIF', 'ZEHİR', 'ZİRVE',
 ];
+
+const VALID_GUESSES: string[] = [
+  ...TARGET_WORDS,
+  'ACELE', 'AÇLIK', 'AFYON', 'AHŞAP', 'AKICI', 'AKREP', 'ALÇAK',
+  'ALMAK', 'ARACI', 'ARIZA', 'ARTAN', 'ARTIK', 'AYLIK', 'AZAMI',
+  'BAĞCI', 'BAKIŞ', 'BANYO', 'BASIN', 'BASIT', 'BATIK', 'BAYAT',
+  'BEKAR', 'BİLEK', 'BİRİM', 'BÖYLE', 'BUDAK', 'BURSA', 'ÇADIR',
+  'ÇAKIL', 'ÇALIŞ', 'ÇIKAR', 'ÇİZGİ', 'ÇOĞUL', 'ÇÖZÜM', 'DAĞCI',
+  'DAMAR', 'DAMLA', 'DEĞER', 'DEVAM', 'DİKİŞ', 'DİZEL', 'DOLAR',
+  'DÜŞÜK', 'DÜŞÜN', 'DÜZEN', 'EMSAL', 'ENGİN', 'ERKEK', 'ESNAF',
+  'EŞARP', 'EŞSİZ', 'FAKAT', 'FIRIN', 'FLORA', 'GELEN', 'GENİŞ',
+  'GİRİŞ', 'GİZLİ', 'GÖZDE', 'GÜMLÜ', 'HİSSE', 'HIZLI', 'İKLİM',
+  'İMKAN', 'İSTİF', 'KAÇAK', 'KAÇIR', 'KAHİN', 'KALIŞ', 'KAYIT',
+  'KEŞİF', 'KILIF', 'KİRAZ', 'KOYUN', 'KUŞAK', 'LİSAN', 'MADEN',
+  'MANAV', 'MECAZ', 'MİRAS', 'MOBİL', 'MORAL', 'NİYET', 'OLMAZ',
+  'ONLAR', 'ÖRGÜT', 'ÖLÇÜM', 'PANDA', 'PATIK', 'PIRIL', 'RAKIT',
+  'SABİT', 'SAĞIR', 'SATIN', 'SEÇİM', 'SERGİ', 'SEYİR', 'SİNİR',
+  'SOYUT', 'TABİP', 'TABUR', 'TUTAR', 'UÇMAK', 'VAKIF', 'YAĞLI',
+  'YAPIŞ', 'YAYIN', 'YAZGI', 'YENİK', 'YOĞUR', 'ZATEN', 'ZİHİN',
+  'ZİYAN', 'ŞANSI', 'AÇGÖZ', 'ADALE', 'IŞILD', 'KABAR', 'KIRIK',
+  'LANET', 'MUSLUk', 'NAMAZ', 'ORUÇL', 'PIRIL', 'RIHTM', 'SABİR',
+  'TOPAZ', 'UÇARI', 'ÜZGÜN', 'YANIT', 'ZEVKL',
+];
+
+const TURKISH_DICTIONARY: Set<string> = new Set(
+  VALID_GUESSES.map(w => turkishUpper(w.trim()))
+    .filter(w => w.length === WORD_LENGTH)
+);
 
 type LetterResult = 'correct' | 'present' | 'absent';
 
@@ -57,7 +103,7 @@ interface WordleMove extends Move {
 
 export class Wordle extends GameEngine {
   initialize(players: string[]): WordleState {
-    const targetWord = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
+    const targetWord = TARGET_WORDS[Math.floor(Math.random() * TARGET_WORDS.length)];
 
     return {
       players: [...players],
@@ -78,21 +124,34 @@ export class Wordle extends GameEngine {
     if (s.players[s.currentPlayerIndex] !== userId) return false;
     if (!m.word || typeof m.word !== 'string') return false;
 
-    const word = m.word.toLowerCase().trim();
+    const word = turkishUpper(m.word.trim());
     if (word.length !== WORD_LENGTH) return false;
-    if (!/^[a-z]+$/.test(word)) return false;
+
+    const TURKISH_CHARS = /^[ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ]+$/;
+    if (!TURKISH_CHARS.test(word)) return false;
 
     return true;
+  }
+
+  isValidDictionaryWord(move: Move): boolean {
+    const m = move as WordleMove;
+    if (!m.word || typeof m.word !== 'string') return false;
+    const word = turkishUpper(m.word.trim());
+    if (word.length !== WORD_LENGTH) return false;
+    return TURKISH_DICTIONARY.has(word);
   }
 
   applyMove(state: GameState, move: Move, userId: string): WordleState {
     const s = state as WordleState;
     const m = move as WordleMove;
-    const word = m.word.toLowerCase().trim();
+    const word = turkishUpper(m.word.trim());
 
     const results = this._evaluateGuess(word, s.targetWord);
 
-    const newGuesses: GuessResult[] = [...s.guesses, { word, results, playerId: userId }];
+    const newGuesses: GuessResult[] = [
+      ...s.guesses,
+      { word: turkishLower(word), results, playerId: userId },
+    ];
 
     const isCorrect = results.every((r) => r === 'correct');
 
@@ -133,41 +192,44 @@ export class Wordle extends GameEngine {
   getGameLog(move: Move, _userId: string, state: GameState): string {
     const s = state as WordleState;
     const m = move as WordleMove;
-    const word = m.word.toLowerCase().trim();
+    const word = turkishUpper(m.word.trim());
 
     if (s.winner) {
-      return `guessed "${word}" correctly! 🎉`;
+      return `"${word}" doğru tahmin etti!`;
     }
 
     const lastGuess = s.guesses[s.guesses.length - 1];
     const correctCount = lastGuess.results.filter((r) => r === 'correct').length;
     const presentCount = lastGuess.results.filter((r) => r === 'present').length;
 
-    return `guessed "${word}" — ${correctCount} correct, ${presentCount} misplaced`;
+    return `"${word}" tahmin etti — ${correctCount} doğru, ${presentCount} yanlış yerde`;
   }
 
   private _evaluateGuess(guess: string, target: string): LetterResult[] {
-    const results: LetterResult[] = Array(WORD_LENGTH).fill('absent');
-    const targetChars = target.split('');
-    const guessChars = guess.split('');
-    const used = Array(WORD_LENGTH).fill(false);
+    const gLen = Math.min(guess.length, target.length, WORD_LENGTH);
+    const results: LetterResult[] = new Array(WORD_LENGTH).fill('absent');
+    const targetChars = target.split('').slice(0, WORD_LENGTH);
+    const guessChars = guess.split('').slice(0, WORD_LENGTH);
+    const targetClaimed = new Array(WORD_LENGTH).fill(false);
+    const guessClaimed = new Array(WORD_LENGTH).fill(false);
 
-    // First pass: mark correct positions
-    for (let i = 0; i < WORD_LENGTH; i++) {
+    // Pass 1: claim exact positional matches (green)
+    for (let i = 0; i < gLen; i++) {
       if (guessChars[i] === targetChars[i]) {
         results[i] = 'correct';
-        used[i] = true;
+        targetClaimed[i] = true;
+        guessClaimed[i] = true;
       }
     }
 
-    // Second pass: mark present (wrong position)
-    for (let i = 0; i < WORD_LENGTH; i++) {
-      if (results[i] === 'correct') continue;
+    // Pass 2: claim misplaced matches (yellow) from remaining frequency pool
+    for (let i = 0; i < gLen; i++) {
+      if (guessClaimed[i]) continue;
 
-      for (let j = 0; j < WORD_LENGTH; j++) {
-        if (!used[j] && guessChars[i] === targetChars[j]) {
+      for (let j = 0; j < gLen; j++) {
+        if (!targetClaimed[j] && guessChars[i] === targetChars[j]) {
           results[i] = 'present';
-          used[j] = true;
+          targetClaimed[j] = true;
           break;
         }
       }

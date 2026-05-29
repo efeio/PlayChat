@@ -85,7 +85,7 @@ export class ConnectFour extends GameEngine {
 
   getGameLog(move: Move, _userId: string, _state: GameState): string {
     const m = move as ConnectFourMove;
-    return `dropped a piece in column ${m.column + 1}`;
+    return `${m.column + 1}. sütuna taş koydu`;
   }
 
   private _hasConnect(

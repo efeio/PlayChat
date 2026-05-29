@@ -55,6 +55,11 @@ const TOKEN_REVALIDATION_INTERVAL_MS = 60000;
 const userSockets = new Map<string, Set<string>>();
 
 /**
+ * Reverse map: socketId -> userId for O(1) untrack lookups.
+ */
+const socketToUser = new Map<string, string>();
+
+/**
  * Handle for the periodic token revalidation loop.
  */
 let revalidationIntervalHandle: NodeJS.Timeout | null = null;
@@ -69,22 +74,25 @@ function trackUserSocket(userId: string, socketId: string): void {
     userSockets.set(userId, sockets);
   }
   sockets.add(socketId);
+  socketToUser.set(socketId, userId);
 }
 
 /**
- * Unregisters a socket from its user. Returns the userId if found.
+ * Unregisters a socket from its user. O(1) via reverse lookup map.
  */
 function untrackUserSocket(socketId: string): string | undefined {
-  for (const [userId, sockets] of userSockets.entries()) {
-    if (sockets.has(socketId)) {
-      sockets.delete(socketId);
-      if (sockets.size === 0) {
-        userSockets.delete(userId);
-      }
-      return userId;
+  const userId = socketToUser.get(socketId);
+  if (!userId) return undefined;
+
+  socketToUser.delete(socketId);
+  const sockets = userSockets.get(userId);
+  if (sockets) {
+    sockets.delete(socketId);
+    if (sockets.size === 0) {
+      userSockets.delete(userId);
     }
   }
-  return undefined;
+  return userId;
 }
 
 /**
@@ -121,11 +129,12 @@ const SYSTEM_EVENTS = new Set([
  * @returns The configured Socket.IO Server instance.
  */
 export function initSocket(httpServer: HttpServer): Server {
+  const isDevWildcard = env.CORS_ORIGIN === '*';
   const io = new Server(httpServer, {
     cors: {
-      origin: env.CORS_ORIGIN,
+      origin: isDevWildcard ? true : env.CORS_ORIGIN,
       methods: ['GET', 'POST'],
-      credentials: true,
+      credentials: !isDevWildcard,
     },
     pingInterval: 25000,
     pingTimeout: 20000,
@@ -161,25 +170,18 @@ export function initSocket(httpServer: HttpServer): Server {
     }, AUTH_TIMEOUT_MS);
 
     /**
-     * Global event interceptor: rate limiting + payload validation.
-     * Runs on EVERY incoming event AFTER authentication.
-     * System events (authenticate, disconnect) bypass this.
+     * Per-socket middleware: rate limiting + payload validation.
+     * Unlike onAny, socket.use() can block event propagation via next(error).
      */
-    socket.onAny((eventName: string, ...args: unknown[]) => {
-      if (SYSTEM_EVENTS.has(eventName)) return;
+    socket.use(([eventName, ...args], next) => {
+      if (SYSTEM_EVENTS.has(eventName)) return next();
 
       if (!socket.data.authenticated) {
-        return;
+        return next(new Error('Not authenticated'));
       }
 
       if (isRateLimited(socket.id, eventName)) {
         const shouldDisconnect = recordViolation(socket.id);
-        const lastArg = args[args.length - 1];
-        if (typeof lastArg === 'function') {
-          (lastArg as (res: { error: string }) => void)({
-            error: 'Rate limit exceeded. Please slow down.',
-          });
-        }
         socket.emit('error', { message: 'Rate limit exceeded' });
         if (shouldDisconnect) {
           socket.emit('error', { message: 'Too many violations — disconnecting' });
@@ -188,23 +190,19 @@ export function initSocket(httpServer: HttpServer): Server {
           }
           socket.disconnect(true);
         }
-        return;
+        return next(new Error('Rate limit exceeded'));
       }
 
       for (const arg of args) {
         if (arg !== null && arg !== undefined && typeof arg === 'object' && typeof arg !== 'function') {
           if (!isPayloadSafe(arg)) {
-            const lastArg = args[args.length - 1];
-            if (typeof lastArg === 'function') {
-              (lastArg as (res: { error: string }) => void)({
-                error: 'Invalid payload structure',
-              });
-            }
             socket.emit('error', { message: 'Invalid payload rejected' });
-            return;
+            return next(new Error('Invalid payload'));
           }
         }
       }
+
+      next();
     });
 
     /**
@@ -319,7 +317,6 @@ export function initSocket(httpServer: HttpServer): Server {
         untrackUserSocket(socket.id);
       }
 
-      untrackSocketRoom(socket.id);
       cleanupRateLimiterSocket(socket.id);
     });
   });

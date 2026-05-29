@@ -68,20 +68,31 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   const emailVerifyToken = generateSecureToken();
   const emailVerifyExpires = new Date(Date.now() + VERIFY_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
 
-  const user = await prisma.user.create({
-    data: {
-      username: input.username,
-      displayName: input.displayName,
-      email: input.email,
-      passwordHash,
-      emailVerifyToken,
-      emailVerifyExpires,
-      isVerified: false,
-      stats: {
-        create: { gameType: GameType.GENERAL },
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        username: input.username,
+        displayName: input.displayName,
+        email: input.email,
+        passwordHash,
+        emailVerifyToken,
+        emailVerifyExpires,
+        isVerified: false,
+        stats: {
+          create: { gameType: GameType.GENERAL },
+        },
       },
-    },
-  });
+    });
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
+      const target = (err as { meta?: { target?: string[] } }).meta?.target || [];
+      if (target.includes('email')) throw new Error('Email already in use');
+      if (target.includes('username')) throw new Error('Username already taken');
+      throw new Error('Email or username already in use');
+    }
+    throw err;
+  }
 
   await sendVerificationEmail(user.email, emailVerifyToken);
 

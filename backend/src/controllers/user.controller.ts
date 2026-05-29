@@ -5,13 +5,15 @@ export async function getProfile(
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply
 ) {
+  const isOwnProfile = request.user?.userId === request.params.id;
+
   const user = await prisma.user.findUnique({
     where: { id: request.params.id },
     select: {
       id: true,
       username: true,
       displayName: true,
-      email: true,
+      email: isOwnProfile,
       avatarUrl: true,
       isVerified: true,
       createdAt: true,
@@ -39,8 +41,24 @@ export async function updateProfile(
   const { displayName, avatarUrl } = request.body;
 
   const updateData: Record<string, string> = {};
-  if (displayName) updateData.displayName = displayName;
-  if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+
+  if (displayName) {
+    const trimmed = displayName.trim();
+    if (trimmed.length < 2 || trimmed.length > 30) {
+      return reply.status(400).send({ error: 'Display name must be 2-30 characters' });
+    }
+    updateData.displayName = trimmed;
+  }
+
+  if (avatarUrl !== undefined) {
+    if (avatarUrl && avatarUrl.length > 500) {
+      return reply.status(400).send({ error: 'Avatar URL too long' });
+    }
+    if (avatarUrl && !/^https?:\/\/.+/.test(avatarUrl)) {
+      return reply.status(400).send({ error: 'Invalid avatar URL' });
+    }
+    updateData.avatarUrl = avatarUrl;
+  }
 
   if (Object.keys(updateData).length === 0) {
     return reply.status(400).send({ error: 'No fields to update' });

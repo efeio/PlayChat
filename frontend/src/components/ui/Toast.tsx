@@ -21,13 +21,13 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
   const getTypeStyles = () => {
     switch (type) {
       case 'error':
-        return 'border-status-error/20 bg-status-error/10 text-red-300';
+        return 'border-status-error/20 bg-status-error/10 text-status-error';
       case 'success':
-        return 'border-status-success/20 bg-status-success/10 text-emerald-300';
+        return 'border-status-success/20 bg-status-success/10 text-status-success';
       case 'warning':
-        return 'border-accent-warm/20 bg-accent-warm/10 text-amber-300';
+        return 'border-accent-warm/20 bg-accent-warm/10 text-accent-warm';
       default:
-        return 'border-accent-primary/20 bg-accent-primary/10 text-indigo-200';
+        return 'border-accent-primary/20 bg-accent-primary/10 text-accent-primary';
     }
   };
 
@@ -83,6 +83,7 @@ export function Toast({ id, type, message, onDismiss }: ToastProps) {
           onDismiss(id);
         }}
         className="shrink-0 text-current opacity-40 hover:opacity-100 transition-opacity"
+        aria-label="Bildirimi kapat"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />

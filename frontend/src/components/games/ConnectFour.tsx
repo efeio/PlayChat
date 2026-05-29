@@ -42,7 +42,7 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <p className="text-text-primary font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
             {winner ? `${getPlayerName(winner)} kazandı!` : 'Berabere!'}
           </p>
         ) : (
@@ -70,7 +70,7 @@ export function ConnectFour({ gameState, onMove, currentUserId, players }: Conne
             <div className={`w-4 h-4 rounded-full ${
               i === 0 ? 'game-piece-1' : 'game-piece-2'
             }`} />
-            <span className={currentPlayerIndex === i && !isFinished ? 'text-white font-medium' : ''}>
+            <span className={currentPlayerIndex === i && !isFinished ? 'text-text-primary font-medium' : ''}>
               {getPlayerName(pid)}
             </span>
           </div>

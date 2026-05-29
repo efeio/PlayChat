@@ -5,7 +5,8 @@ function getActionFromRoute(method: string, url: string): string {
   if (url.includes('/auth/register')) return 'auth:register';
   if (url.includes('/auth/login')) return 'auth:login';
   if (url.includes('/auth/forgot-password')) return 'auth:forgot-password';
-  if (method === 'POST' && url.includes('/rooms') && !url.includes('/verify')) return 'rooms:create';
+  if (method === 'POST' && url.includes('/verify')) return 'rooms:verify-password';
+  if (method === 'POST' && url.includes('/rooms')) return 'rooms:create';
   if (method === 'GET' && url.includes('/rooms')) return 'rooms:list';
   return 'default';
 }
@@ -36,5 +37,6 @@ export async function rateLimitMiddleware(
       error: 'Too many requests. Please try again later.',
       retryAfter: result.resetIn,
     });
+    return;
   }
 }

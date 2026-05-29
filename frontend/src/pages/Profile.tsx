@@ -41,6 +41,16 @@ const GAME_TYPE_LABELS: Record<string, string> = {
   NUMBER_GUESS: 'Sayı Tahmin',
 };
 
+const GAME_COLORS: Record<string, string> = {
+  TIC_TAC_TOE: '#8b5cf6',
+  CONNECT_FOUR: '#06d6a0',
+  ROCK_PAPER_SCISSORS: '#f59e0b',
+  HANGMAN: '#ef4444',
+  WORDLE: '#3b82f6',
+  MEMORY_CARDS: '#ec4899',
+  NUMBER_GUESS: '#14b8a6',
+};
+
 export function Profile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -104,7 +114,7 @@ export function Profile() {
       <div className="flex h-screen bg-bg-base">
         <Sidebar />
         <main className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-border-default border-t-white rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-border-default border-t-accent-primary rounded-full animate-spin" />
         </main>
       </div>
     );
@@ -116,7 +126,7 @@ export function Profile() {
         <Sidebar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-white text-sm font-medium mb-2">Profil yüklenemedi</p>
+            <p className="text-text-primary text-sm font-medium mb-2">Profil yüklenemedi</p>
             <p className="text-text-muted text-xs mb-4">Lütfen tekrar giriş yapmayı deneyin.</p>
             <Button variant="ghost" onClick={() => navigate('/dashboard')}>
               Geri Dön
@@ -131,96 +141,122 @@ export function Profile() {
     <div className="flex h-screen bg-bg-base">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 py-10">
-          {/* Header */}
-          <div className="flex items-start gap-5 mb-10">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-accent-primary/20">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          {/* Header - centered */}
+          <div className="flex flex-col items-center text-center mb-12">
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-text-inverse text-3xl font-bold shadow-lg shadow-accent-primary/20 mb-4">
               {profile.displayName.charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
-              {isEditing ? (
-                <div className="flex items-center gap-3">
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="max-w-[240px]"
-                    maxLength={32}
-                  />
-                  <Button onClick={handleSave} disabled={isSaving || !editName.trim()}>
-                    Kaydet
-                  </Button>
-                  <Button variant="ghost" onClick={() => { setIsEditing(false); setEditName(profile.displayName); }}>
-                    İptal
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-white truncate">{profile.displayName}</h1>
-                  {isOwnProfile && (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="p-1.5 rounded-lg text-text-muted hover:text-white hover:bg-bg-elevated transition-colors cursor-pointer"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              )}
-              <p className="text-text-muted text-sm mt-1">@{profile.username}</p>
-              <p className="text-text-muted text-xs mt-1">
-                {new Date(profile.createdAt).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} tarihinde katıldı
-              </p>
-            </div>
+            {isEditing ? (
+              <div className="flex items-center gap-3 mt-2">
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="max-w-[240px]"
+                  maxLength={32}
+                />
+                <Button onClick={handleSave} disabled={isSaving || !editName.trim()}>
+                  Kaydet
+                </Button>
+                <Button variant="ghost" onClick={() => { setIsEditing(false); setEditName(profile.displayName); }}>
+                  İptal
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mt-2">
+                <h1 className="text-3xl font-bold text-text-primary">{profile.displayName}</h1>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+            <p className="text-text-muted text-sm mt-1">@{profile.username}</p>
+            <p className="text-text-muted text-xs mt-1">
+              {new Date(profile.createdAt).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} tarihinde katıldı
+            </p>
           </div>
 
-          {/* General Stats */}
+          {/* General Stats - larger cards */}
           {generalStats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-              <StatCard label="Oynanan" value={generalStats.gamesPlayed} />
-              <StatCard label="Galibiyet" value={generalStats.wins} accent="green" />
-              <StatCard label="Mağlubiyet" value={generalStats.losses} accent="red" />
-              <StatCard label="Kazanma Oranı" value={`%${winRate}`} accent="blue" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
+              <StatCard label="Oynanan" value={generalStats.gamesPlayed} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>} />
+              <StatCard label="Galibiyet" value={generalStats.wins} accent="green" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>} />
+              <StatCard label="Mağlubiyet" value={generalStats.losses} accent="red" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>} />
+              <StatCard label="Kazanma Oranı" value={`%${winRate}`} accent="blue" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>} />
             </div>
           )}
 
-          {/* Per-game Stats */}
+          {/* Pie Chart + Game Stats */}
           {gameStats.length > 0 && (
-            <section>
-              <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-4">Oyun Bazında İstatistikler</h2>
-              <div className="space-y-3">
-                {gameStats.map((stat) => {
-                  const label = GAME_TYPE_LABELS[stat.gameType] || stat.gameType;
-                  const rate = stat.gamesPlayed > 0 ? Math.round((stat.wins / stat.gamesPlayed) * 100) : 0;
-                  return (
-                    <div key={stat.id} className="flex items-center gap-4 p-4 bg-bg-card rounded-xl border border-border-default">
-                      <span className="w-8 h-8 flex items-center justify-center text-text-secondary">
-                        {GAME_ICONS[stat.gameType] || GAME_ICONS.GENERAL}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white">{label}</p>
-                        <p className="text-xs text-text-muted">
-                          {stat.gamesPlayed} oyun · {stat.wins}G / {stat.losses}M / {stat.draws}B
-                        </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+              {/* Pie Chart */}
+              <div className="p-6 bg-bg-card rounded-2xl border border-border-default">
+                <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">Oyun Dağılımı</h2>
+                <div className="flex flex-col items-center gap-6">
+                  <PieChart gameStats={gameStats} />
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {gameStats.map((stat) => (
+                      <div key={stat.id} className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: GAME_COLORS[stat.gameType] || '#6b7280' }} />
+                        <span className="text-xs text-text-secondary">{GAME_TYPE_LABELS[stat.gameType] || stat.gameType}</span>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-white">{rate}%</p>
-                        <p className="text-[10px] text-text-muted">kazanma</p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    ))}
+                  </div>
+                </div>
               </div>
-            </section>
+
+              {/* Per-game Stats */}
+              <div className="p-6 bg-bg-card rounded-2xl border border-border-default">
+                <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">Oyun Bazında</h2>
+                <div className="space-y-3">
+                  {gameStats.map((stat) => {
+                    const label = GAME_TYPE_LABELS[stat.gameType] || stat.gameType;
+                    const rate = stat.gamesPlayed > 0 ? Math.round((stat.wins / stat.gamesPlayed) * 100) : 0;
+                    return (
+                      <div key={stat.id} className="flex items-center gap-3 p-3 bg-bg-elevated/50 rounded-xl">
+                        <span className="w-8 h-8 flex items-center justify-center text-text-secondary">
+                          {GAME_ICONS[stat.gameType] || GAME_ICONS.GENERAL}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-text-primary">{label}</p>
+                          <p className="text-xs text-text-muted">
+                            {stat.gamesPlayed} oyun · {stat.wins}G / {stat.losses}M / {stat.draws}B
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-text-primary">{rate}%</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Empty State */}
-          {!generalStats && (
-            <div className="text-center py-16">
-              <p className="text-text-muted text-sm">Henüz oyun oynamadın.</p>
-              <p className="text-text-muted text-xs mt-1">Bir odaya katıl ve istatistiklerini burada gör.</p>
+          {(!generalStats || (generalStats.gamesPlayed === 0 && gameStats.length === 0)) && (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="w-20 h-20 rounded-3xl bg-accent-primary/8 border border-accent-primary/15 flex items-center justify-center">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent-primary">
+                  <line x1="12" y1="20" x2="12" y2="10" />
+                  <line x1="18" y1="20" x2="18" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="16" />
+                </svg>
+              </div>
+              <p className="text-text-primary text-lg font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>Henüz oyun oynamadın</p>
+              <p className="text-text-muted text-sm">Bir odaya katıl ve istatistiklerini burada gör.</p>
+              <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mt-2">
+                Odalara Git
+              </Button>
             </div>
           )}
         </div>
@@ -229,16 +265,97 @@ export function Profile() {
   );
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
+function StatCard({ label, value, accent, icon }: { label: string; value: string | number; accent?: string; icon: React.ReactNode }) {
   const accentClasses: Record<string, string> = {
-    green: 'text-emerald-400',
-    red: 'text-red-400',
-    blue: 'text-sky-400',
+    green: 'text-emerald-500',
+    red: 'text-red-500',
+    blue: 'text-sky-500',
   };
   return (
-    <div className="p-4 bg-bg-card rounded-xl border border-border-default">
-      <p className="text-xs text-text-muted mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${accent ? accentClasses[accent] : 'text-white'}`}>{value}</p>
+    <div className="p-5 bg-bg-card rounded-2xl border border-border-default shadow-sm flex flex-col gap-3">
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${accent ? accentClasses[accent] : 'text-text-muted'} bg-bg-elevated`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-text-muted font-medium">{label}</p>
+        <p className={`text-3xl font-bold mt-0.5 ${accent ? accentClasses[accent] : 'text-text-primary'}`}>{value}</p>
+      </div>
     </div>
+  );
+}
+
+function PieChart({ gameStats }: { gameStats: UserStat[] }) {
+  const total = gameStats.reduce((sum, s) => sum + s.gamesPlayed, 0);
+  if (total === 0) {
+    return (
+      <div className="w-40 h-40 rounded-full border-[12px] border-border-default flex items-center justify-center">
+        <span className="text-text-muted text-xs">Veri yok</span>
+      </div>
+    );
+  }
+
+  let cumulativePercent = 0;
+  const segments = gameStats
+    .filter((s) => s.gamesPlayed > 0)
+    .map((stat) => {
+      const percent = (stat.gamesPlayed / total) * 100;
+      const startPercent = cumulativePercent;
+      cumulativePercent += percent;
+      return { ...stat, percent, startPercent };
+    });
+
+  const getCoordinatesForPercent = (percent: number) => {
+    const x = Math.cos(2 * Math.PI * (percent / 100));
+    const y = Math.sin(2 * Math.PI * (percent / 100));
+    return [x, y];
+  };
+
+  return (
+    <svg viewBox="-1 -1 2 2" className="w-44 h-44" style={{ transform: 'rotate(-90deg)' }}>
+      {segments.map((segment) => {
+        const [startX, startY] = getCoordinatesForPercent(segment.startPercent);
+        const [endX, endY] = getCoordinatesForPercent(segment.startPercent + segment.percent);
+        const largeArcFlag = segment.percent > 50 ? 1 : 0;
+        const pathData = [
+          `M ${startX} ${startY}`,
+          `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+          `L 0 0`,
+        ].join(' ');
+
+        return (
+          <path
+            key={segment.id}
+            d={pathData}
+            fill={GAME_COLORS[segment.gameType] || '#6b7280'}
+            stroke="var(--color-bg-card)"
+            strokeWidth="0.04"
+          />
+        );
+      })}
+      <circle cx="0" cy="0" r="0.55" fill="var(--color-bg-card)" />
+      <text
+        x="0"
+        y="0.05"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="var(--color-text-primary)"
+        fontSize="0.3"
+        fontWeight="bold"
+        style={{ transform: 'rotate(90deg)' }}
+      >
+        {total}
+      </text>
+      <text
+        x="0"
+        y="0.3"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="var(--color-text-muted)"
+        fontSize="0.14"
+        style={{ transform: 'rotate(90deg)' }}
+      >
+        oyun
+      </text>
+    </svg>
   );
 }

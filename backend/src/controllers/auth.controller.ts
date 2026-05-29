@@ -49,6 +49,22 @@ export async function register(
     return reply.status(400).send({ error: 'Password must be at least 6 characters' });
   }
 
+  if (password.length > 128) {
+    return reply.status(400).send({ error: 'Password must be at most 128 characters' });
+  }
+
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    return reply.status(400).send({ error: 'Username must be 3-20 characters (letters, numbers, underscore)' });
+  }
+
+  if (displayName.trim().length < 2 || displayName.trim().length > 30) {
+    return reply.status(400).send({ error: 'Display name must be 2-30 characters' });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return reply.status(400).send({ error: 'Invalid email format' });
+  }
+
   try {
     const result = await registerUser({ username, displayName, email, password });
     return reply.status(201).send(result);
@@ -148,7 +164,7 @@ export async function googleOAuthCallback(
       avatarUrl: profile.picture,
     });
 
-    return reply.redirect(`${env.CLIENT_URL}/oauth/callback?token=${result.token}`);
+    return reply.redirect(`${env.CLIENT_URL}/oauth/callback#token=${encodeURIComponent(result.token)}`);
   } catch {
     return reply.redirect(`${env.CLIENT_URL}/login?error=oauth_failed`);
   }

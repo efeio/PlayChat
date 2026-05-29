@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 
 export function Register() {
   const [displayName, setDisplayName] = useState('');
@@ -45,6 +46,11 @@ export function Register() {
 
   return (
     <div className="min-h-screen flex bg-bg-base relative overflow-hidden">
+      {/* Theme toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Animated background orbs */}
       <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-accent-secondary/8 blur-[120px] animate-float" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-accent-primary/10 blur-[100px] animate-float" style={{ animationDelay: '1.5s' }} />
@@ -66,7 +72,7 @@ export function Register() {
             <div className="w-12 h-[2px] bg-gradient-to-r from-accent-secondary to-transparent" />
           </div>
 
-          <h2 className="text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <h2 className="text-5xl xl:text-6xl font-bold text-text-primary leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'var(--font-family-display)' }}>
             Arenaya<br />
             <span className="text-gradient">katıl.</span>
           </h2>
@@ -77,17 +83,17 @@ export function Register() {
 
           <div className="mt-12 flex items-center gap-6">
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-family-display)' }}>7</span>
+              <span className="text-2xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-display)' }}>7</span>
               <span className="text-xs text-text-muted">Oyun</span>
             </div>
             <div className="w-px h-8 bg-border-default" />
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-family-display)' }}>Anlık</span>
+              <span className="text-2xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-display)' }}>Anlık</span>
               <span className="text-xs text-text-muted">Çok Oyunculu</span>
             </div>
             <div className="w-px h-8 bg-border-default" />
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-family-display)' }}>Canlı</span>
+              <span className="text-2xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-display)' }}>Canlı</span>
               <span className="text-xs text-text-muted">Sohbet</span>
             </div>
           </div>
@@ -110,7 +116,7 @@ export function Register() {
           <div className="bg-bg-surface/80 backdrop-blur-xl p-8 sm:p-10 rounded-2xl border border-border-default shadow-2xl shadow-black/20 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent-secondary/50 to-transparent" />
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: 'var(--font-family-display)' }}>
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2 tracking-tight" style={{ fontFamily: 'var(--font-family-display)' }}>
               Hesap oluştur
             </h1>
             <p className="text-text-secondary text-sm mb-8">

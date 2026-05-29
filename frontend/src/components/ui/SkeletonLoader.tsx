@@ -6,20 +6,25 @@ export function SkeletonLoader({ className = '' }: { className?: string }) {
 
 export function RoomCardSkeleton() {
   return (
-    <div className="bg-bg-surface border border-border-default rounded-2xl p-6 min-h-[240px] flex flex-col justify-between">
+    <div className="bg-bg-surface/60 border border-border-default rounded-[20px] p-6 min-h-[240px] flex flex-col justify-between backdrop-blur-sm">
       <div>
         <div className="flex items-start justify-between mb-4">
-          <SkeletonLoader className="h-5 w-32" />
+          <div className="flex items-center gap-3">
+            <SkeletonLoader className="w-10 h-10 !rounded-xl" />
+            <div>
+              <SkeletonLoader className="h-4 w-28 mb-2" />
+              <SkeletonLoader className="h-3 w-16" />
+            </div>
+          </div>
           <SkeletonLoader className="h-5 w-14 !rounded-full" />
         </div>
-        <SkeletonLoader className="h-3 w-20 mb-6" />
         <div className="flex -space-x-2 mb-6">
           {[1, 2, 3].map((i) => (
-            <SkeletonLoader key={i} className="w-8 h-8 !rounded-full ring-2 ring-bg-surface" />
+            <SkeletonLoader key={i} className="w-7 h-7 !rounded-full ring-2 ring-bg-surface" />
           ))}
         </div>
       </div>
-      <SkeletonLoader className="h-11 w-full" />
+      <SkeletonLoader className="h-[46px] w-full !rounded-2xl" />
     </div>
   );
 }

@@ -35,5 +35,6 @@ export async function authenticate(
     request.user = decoded;
   } catch {
     reply.status(401).send({ error: 'Invalid or expired token' });
+    return;
   }
 }

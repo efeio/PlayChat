@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface CardState {
   id: number;
@@ -19,34 +19,69 @@ interface MemoryCardsProps {
     pairCount: number;
     matchedPairs: number;
     lastAction: 'flip' | 'match' | 'mismatch' | null;
+    turnLocked?: boolean;
   };
   onMove: (move: { cardId: number }) => void;
   currentUserId: string;
   players: { userId: string; displayName: string }[];
 }
 
-export function MemoryCards({ gameState, onMove, currentUserId, players }: MemoryCardsProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
+const LOCK_SAFETY_TIMEOUT_MS = 3000;
 
-  const { cards, currentPlayerIndex, scores, winner, finished, pairCount, matchedPairs } = gameState;
+export function MemoryCards({ gameState, onMove, currentUserId, players }: MemoryCardsProps) {
+  const [localLock, setLocalLock] = useState(false);
+  const [pendingCards, setPendingCards] = useState<Set<number>>(new Set());
+  const lockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSafetyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastStateRef = useRef(gameState);
+
+  const { cards, currentPlayerIndex, scores, winner, finished, pairCount, matchedPairs, lastAction, turnLocked } = gameState;
   const isMyTurn = gameState.players[currentPlayerIndex] === currentUserId;
+  const isLocked = localLock || turnLocked;
 
   const getPlayerName = (id: string) =>
     players.find((p) => p.userId === id)?.displayName || id;
 
   useEffect(() => {
-    setIsProcessing(false);
-  }, [gameState]);
+    lastStateRef.current = gameState;
+    setPendingCards(new Set());
+    if (pendingSafetyRef.current) {
+      clearTimeout(pendingSafetyRef.current);
+      pendingSafetyRef.current = null;
+    }
 
-  const handleCardClick = (cardId: number) => {
-    if (!isMyTurn || isProcessing || finished) return;
+    if (lastAction === 'mismatch') {
+      setLocalLock(true);
+      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+      lockTimerRef.current = setTimeout(() => {
+        setLocalLock(false);
+      }, 1300);
+    } else {
+      setLocalLock(false);
+    }
+  }, [gameState, lastAction]);
+
+  useEffect(() => {
+    return () => {
+      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+      if (pendingSafetyRef.current) clearTimeout(pendingSafetyRef.current);
+    };
+  }, []);
+
+  const handleCardClick = useCallback((cardId: number) => {
+    if (!isMyTurn || isLocked || finished) return;
     const card = cards[cardId];
-    if (card.isMatched || card.isFlipped) return;
-    if (gameState.flippedCards.length >= 2) return;
-
-    setIsProcessing(true);
+    if (!card || card.isMatched || card.isFlipped) return;
+    if (pendingCards.has(cardId)) return;
+    const totalFlipped = gameState.flippedCards.length + pendingCards.size;
+    if (totalFlipped >= 2) return;
+    setPendingCards(prev => new Set(prev).add(cardId));
+    if (pendingSafetyRef.current) clearTimeout(pendingSafetyRef.current);
+    pendingSafetyRef.current = setTimeout(() => {
+      setPendingCards(new Set());
+    }, LOCK_SAFETY_TIMEOUT_MS);
     onMove({ cardId });
-  };
+  }, [isMyTurn, isLocked, finished, cards, pendingCards, gameState.flippedCards, onMove]);
 
   const gridCols = cards.length <= 16 ? 'grid-cols-4' : 'grid-cols-6';
 
@@ -55,15 +90,20 @@ export function MemoryCards({ gameState, onMove, currentUserId, players }: Memor
       {/* Status */}
       <div className="text-center">
         {finished ? (
-          <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
-            {winner ? `${getPlayerName(winner)} kazandı!` : 'Berabere!'}
-          </p>
+          <div className="space-y-1">
+            <p className="text-text-primary font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
+              {winner ? `${getPlayerName(winner)} kazandı!` : 'Berabere!'}
+            </p>
+            <p className="text-text-muted text-xs">Tüm eşler bulundu</p>
+          </div>
         ) : (
           <p className="text-text-secondary text-sm">
-            {isMyTurn ? (
+            {isLocked ? (
+              <span className="text-amber-400 font-medium">Kartlar kapanıyor...</span>
+            ) : isMyTurn ? (
               <span className="text-accent-secondary font-semibold">Sıra sende — bir kart çevir</span>
             ) : (
-              `${getPlayerName(gameState.players[currentPlayerIndex])} bekleniyor...`
+              `${getPlayerName(gameState.players[currentPlayerIndex])} oynuyor...`
             )}
           </p>
         )}
@@ -95,20 +135,27 @@ export function MemoryCards({ gameState, onMove, currentUserId, players }: Memor
       <div className={`grid ${gridCols} gap-2 w-full`}>
         {cards.map((card) => {
           const isRevealed = card.isFlipped || card.isMatched;
+          const showSymbol = isRevealed && card.symbol !== '?';
+          const canClick = isMyTurn && !isLocked && !finished && !card.isMatched && !card.isFlipped;
+
           return (
             <button
               key={card.id}
               onClick={() => handleCardClick(card.id)}
-              disabled={!isMyTurn || isProcessing || finished || card.isMatched || card.isFlipped}
-              className={`aspect-square rounded-xl flex items-center justify-center text-2xl transition-all duration-300 cursor-pointer disabled:cursor-default ${
+              disabled={!canClick}
+              className={`aspect-square rounded-xl flex items-center justify-center text-2xl transition-all duration-300 ${
+                canClick ? 'cursor-pointer' : 'cursor-default'
+              } ${
                 card.isMatched
                   ? 'bg-emerald-600/20 border border-emerald-500/40 scale-95'
                   : isRevealed
                     ? 'bg-bg-elevated border border-accent-primary/40 scale-105'
-                    : 'bg-bg-card border border-border-default hover:border-accent-primary/30 hover:bg-bg-elevated'
+                    : canClick
+                      ? 'bg-bg-card border border-border-default hover:border-accent-primary/30 hover:bg-bg-elevated'
+                      : 'bg-bg-card border border-border-default'
               }`}
             >
-              {isRevealed ? (
+              {showSymbol ? (
                 <span className="select-none">{card.symbol}</span>
               ) : (
                 <span className="text-text-muted text-lg select-none">?</span>
@@ -117,6 +164,35 @@ export function MemoryCards({ gameState, onMove, currentUserId, players }: Memor
           );
         })}
       </div>
+
+      {/* Final scoreboard on finish */}
+      {finished && (
+        <div className="w-full mt-4 p-4 rounded-xl bg-bg-card border border-border-default">
+          <h3 className="text-text-primary text-sm font-semibold mb-3 text-center">Skor Tablosu</h3>
+          <div className="space-y-2">
+            {[...gameState.players]
+              .sort((a, b) => (scores[b] || 0) - (scores[a] || 0))
+              .map((playerId, idx) => (
+                <div
+                  key={playerId}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg ${
+                    idx === 0 && winner === playerId
+                      ? 'bg-emerald-500/10 border border-emerald-500/20'
+                      : 'bg-bg-elevated/50'
+                  }`}
+                >
+                  <span className="text-text-primary text-sm">
+                    {idx + 1}. {getPlayerName(playerId)}
+                    {playerId === currentUserId && <span className="text-text-muted ml-1">(sen)</span>}
+                  </span>
+                  <span className="text-accent-secondary font-bold text-sm">
+                    {scores[playerId] || 0} eş
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

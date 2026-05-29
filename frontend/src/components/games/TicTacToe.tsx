@@ -39,7 +39,7 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
       {/* Status */}
       <div className="text-center">
         {isFinished ? (
-          <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <p className="text-text-primary font-bold text-lg" style={{ fontFamily: 'var(--font-family-display)' }}>
             {winner ? `${getPlayerName(winner)} kazandı!` : 'Berabere!'}
           </p>
         ) : (
@@ -67,7 +67,7 @@ export function TicTacToe({ gameState, onMove, currentUserId, players }: TicTacT
             <span className={`text-lg font-black ${i === 0 ? 'text-indigo-400' : 'text-cyan-400'}`}>
               {i === 0 ? 'X' : 'O'}
             </span>
-            <span className={currentPlayerIndex === i && !isFinished ? 'text-white font-medium' : ''}>
+            <span className={currentPlayerIndex === i && !isFinished ? 'text-text-primary font-medium' : ''}>
               {getPlayerName(pid)}
             </span>
           </div>
