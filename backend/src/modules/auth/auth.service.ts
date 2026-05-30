@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import prisma from '../config/prisma.js';
-import env from '../config/env.js';
+import prisma from '../../infrastructure/config/prisma.js';
+import env from '../../infrastructure/config/env.js';
 import { GameType } from '@prisma/client';
-import { sendVerificationEmail, sendPasswordResetEmail } from './mail.service.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../../infrastructure/services/mail.service.js';
 
 const SALT_ROUNDS = 10;
 const VERIFY_TOKEN_EXPIRY_HOURS = 24;
@@ -254,7 +254,6 @@ export async function forgotPassword(email: string): Promise<void> {
     where: { email },
   });
 
-  // Always respond success to prevent email enumeration
   if (!user || !user.passwordHash) {
     return;
   }

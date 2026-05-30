@@ -1,31 +1,21 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import {
-  register,
-  login,
-  googleOAuthStart,
-  googleOAuthCallback,
-  verifyEmailHandler,
-  resendVerificationHandler,
-  forgotPasswordHandler,
-  resetPasswordHandler,
-} from './controllers/auth.controller.js';
-import { list, create, getById, myRooms, verifyPassword } from './controllers/room.controller.js';
+import { registerAuthRoutes, authenticate } from './modules/auth/index.js';
+import { registerRoomRoutes } from './modules/room/index.js';
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from './controllers/notification.controller.js';
 import { getProfile, updateProfile, getUserStats } from './controllers/user.controller.js';
-import { authenticate } from './middleware/authenticate.js';
-import prisma from './config/prisma.js';
-import { rateLimitMiddleware } from './middleware/rateLimitMiddleware.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import prisma from './infrastructure/config/prisma.js';
+import { rateLimitMiddleware } from './infrastructure/middleware/rateLimitMiddleware.js';
+import { errorHandler } from './infrastructure/middleware/errorHandler.js';
 import { GameType } from '@prisma/client';
 import { initSocket, shutdownSocketSubsystem } from './socket/index.js';
 import {
   rehydrateActiveGames,
   startSnapshotInterval,
   stopSnapshotInterval,
-} from './services/gameState.service.js';
-import { connectRedis, disconnectRedis } from './config/redis.js';
-import env from './config/env.js';
+} from './modules/game/index.js';
+import { connectRedis, disconnectRedis } from './infrastructure/config/redis.js';
+import env from './infrastructure/config/env.js';
 
 process.on('unhandledRejection', (reason) => {
   console.error('[UnhandledRejection]', reason);
@@ -60,20 +50,8 @@ async function main() {
   // Apply rate limiting — runs after authenticate so request.user is available
   app.addHook('preHandler', rateLimitMiddleware);
 
-  app.post('/api/auth/register', register as any);
-  app.post('/api/auth/login', login as any);
-  app.get('/api/auth/google', googleOAuthStart);
-  app.get('/api/auth/google/callback', googleOAuthCallback as any);
-  app.post('/api/auth/verify-email', verifyEmailHandler as any);
-  app.post('/api/auth/resend-verification', resendVerificationHandler as any);
-  app.post('/api/auth/forgot-password', forgotPasswordHandler as any);
-  app.post('/api/auth/reset-password', resetPasswordHandler as any);
-
-  app.get('/api/rooms', list);
-  app.post<{ Body: { name: string; description?: string; type?: string; password?: string; maxMembers?: number } }>('/api/rooms', { preHandler: [authenticate] }, create as any);
-  app.get('/api/rooms/my-rooms', { preHandler: [authenticate] }, myRooms);
-  app.get<{ Params: { id: string } }>('/api/rooms/:id', getById);
-  app.post<{ Params: { id: string }; Body: { password: string } }>('/api/rooms/:id/verify', verifyPassword as any);
+  registerAuthRoutes(app);
+  registerRoomRoutes(app);
 
   // Notification routes
   app.get('/api/notifications', { preHandler: [authenticate] }, listNotifications);

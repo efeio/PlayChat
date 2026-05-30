@@ -1,26 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
-import prisma from '../config/prisma.js';
-import { GameEngine, type GameState } from '../games/GameEngine.js';
-import { TicTacToe } from '../games/TicTacToe.js';
-import { ConnectFour } from '../games/ConnectFour.js';
-import { RockPaperScissors } from '../games/RockPaperScissors.js';
-import { Hangman } from '../games/Hangman.js';
-import { Wordle } from '../games/Wordle.js';
-import { MemoryCards } from '../games/MemoryCards.js';
-import { NumberGuess } from '../games/NumberGuess.js';
-import { GameStatus, GameType } from '@prisma/client';
+import prisma from '../../infrastructure/config/prisma.js';
+import { GameRegistry, GameEngine, type GameState } from './engines/index.js';
+import { GameStatus } from '@prisma/client';
 
-const gameEngines: Record<string, GameEngine> = {
-  TIC_TAC_TOE: new TicTacToe(),
-  CONNECT_FOUR: new ConnectFour(),
-  ROCK_PAPER_SCISSORS: new RockPaperScissors(),
-  HANGMAN: new Hangman(),
-  WORDLE: new Wordle(),
-  MEMORY_CARDS: new MemoryCards(),
-  NUMBER_GUESS: new NumberGuess(),
-};
+const gameEngines: Record<string, GameEngine> = { ...GameRegistry };
 
 export interface ActiveGameEntry {
   engine: GameEngine;
@@ -219,7 +204,7 @@ function rehydrateFromSnapshots(): void {
       continue;
     }
 
-    const meta = state as { _meta?: { gameType: string; roomId: string } };
+    const meta = state as { _meta?: { gameType: string; roomId: string; gameId: string } };
     if (!meta._meta) {
       removeSnapshot(gameId);
       continue;
@@ -230,6 +215,18 @@ function rehydrateFromSnapshots(): void {
       removeSnapshot(gameId);
       continue;
     }
+
+    const { _meta, ...gameState } = state as { _meta: Record<string, unknown>; [k: string]: unknown };
+
+    activeGames.set(gameId, {
+      engine,
+      state: gameState as GameState,
+      gameId,
+      roomId: meta._meta.roomId,
+      gameType: meta._meta.gameType,
+      lastUpdated: Date.now(),
+      moveCount: 0,
+    });
   }
 }
 

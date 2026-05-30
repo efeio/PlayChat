@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import prisma from '../config/prisma.js';
+import prisma from '../../infrastructure/config/prisma.js';
 import { RoomType, MemberRole, GameStatus } from '@prisma/client';
 
 export interface CreateRoomInput {

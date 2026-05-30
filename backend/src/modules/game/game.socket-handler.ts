@@ -1,7 +1,7 @@
 import type { Server, Socket } from 'socket.io';
-import prisma from '../../config/prisma.js';
-import type { GameState } from '../../games/GameEngine.js';
-import { Wordle } from '../../games/Wordle.js';
+import prisma from '../../infrastructure/config/prisma.js';
+import type { GameState } from './engines/index.js';
+import { Wordle } from './engines/index.js';
 import {
   getActiveGames,
   getActiveGame,
@@ -9,11 +9,11 @@ import {
   registerActiveGame,
   updateAndPersistState,
   finishGame,
-} from '../../services/gameState.service.js';
-import { removeMemberFromRoom } from '../../services/room.service.js';
+} from './game-state.service.js';
+import { removeMemberFromRoom } from '../room/index.js';
 import { GameStatus, GameType, MemberRole, PlayerRole, MessageType } from '@prisma/client';
 
-function sanitizeStateForClient(state: GameState, gameType: string): GameState {
+export function sanitizeStateForClient(state: GameState, gameType: string): GameState {
   const s = { ...state } as Record<string, unknown>;
 
   if (gameType === 'HANGMAN') {
@@ -106,7 +106,7 @@ const GAME_NAME_TR: Record<string, string> = {
   ROCK_PAPER_SCISSORS: 'Taş Kağıt Makas',
 };
 
-export function registerGameHandlers(io: Server, socket: Socket) {
+export function registerGameSocketHandlers(io: Server, socket: Socket) {
   const userId = (socket.data as { userId: string }).userId;
   const username = (socket.data as { username: string }).username;
 
@@ -237,6 +237,8 @@ export function registerGameHandlers(io: Server, socket: Socket) {
   });
 
   socket.on('game:move', async (data: { gameId: string; move: Record<string, unknown> }, callback?: (res: { error?: string }) => void) => {
+    let lockKey: string | null = null;
+
     try {
       const { gameId, move } = data;
 
@@ -246,7 +248,7 @@ export function registerGameHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      const lockKey = `${gameId}:${userId}`;
+      lockKey = `${gameId}:${userId}`;
       if (processingMoves.has(lockKey)) {
         if (callback) callback({});
         return;
@@ -338,7 +340,6 @@ export function registerGameHandlers(io: Server, socket: Socket) {
           state: sanitizeStateForClient(newState, activeGame.gameType),
         });
 
-
         const winnerName = winnerId
           ? (await prisma.user.findUnique({ where: { id: winnerId }, select: { displayName: true } }))?.displayName || ''
           : '';
@@ -404,8 +405,9 @@ export function registerGameHandlers(io: Server, socket: Socket) {
     } catch {
       if (callback) callback({ error: 'Failed to process move' });
     } finally {
-      const lk = `${data.gameId}:${userId}`;
-      processingMoves.delete(lk);
+      if (lockKey) {
+        processingMoves.delete(lockKey);
+      }
     }
   });
 
@@ -434,14 +436,14 @@ export function registerGameHandlers(io: Server, socket: Socket) {
     if (isStillConnected) return;
 
     for (const [gameId, game] of playerGames) {
-      if (disconnectTimers.has(userId)) break;
+      const timerKey = `${userId}:${gameId}`;
+      if (disconnectTimers.has(timerKey)) continue;
 
       const timer = setTimeout(async () => {
+        disconnectTimers.delete(timerKey);
+
         const currentGame = getActiveGame(gameId);
-        if (!currentGame) {
-          disconnectTimers.delete(userId);
-          return;
-        }
+        if (!currentGame) return;
 
         const s = currentGame.state as { players?: string[] };
         const otherPlayer = s.players?.find((p) => p !== userId);
@@ -468,20 +470,19 @@ export function registerGameHandlers(io: Server, socket: Socket) {
           include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
         });
         io.to(currentGame.roomId).emit('room:updated', { id: currentGame.roomId, members: updatedMembers });
-
-        disconnectTimers.delete(userId);
       }, 30000);
 
-      disconnectTimers.set(userId, timer);
+      disconnectTimers.set(timerKey, timer);
     }
   });
 }
 
 export function cancelDisconnectTimer(userId: string) {
-  const timer = disconnectTimers.get(userId);
-  if (timer) {
-    clearTimeout(timer);
-    disconnectTimers.delete(userId);
+  for (const [key, timer] of disconnectTimers.entries()) {
+    if (key === userId || key.startsWith(`${userId}:`)) {
+      clearTimeout(timer);
+      disconnectTimers.delete(key);
+    }
   }
 }
 

@@ -69,9 +69,9 @@ const VALID_GUESSES: string[] = [
   'SABİT', 'SAĞIR', 'SATIN', 'SEÇİM', 'SERGİ', 'SEYİR', 'SİNİR',
   'SOYUT', 'TABİP', 'TABUR', 'TUTAR', 'UÇMAK', 'VAKIF', 'YAĞLI',
   'YAPIŞ', 'YAYIN', 'YAZGI', 'YENİK', 'YOĞUR', 'ZATEN', 'ZİHİN',
-  'ZİYAN', 'ŞANSI', 'AÇGÖZ', 'ADALE', 'IŞILD', 'KABAR', 'KIRIK',
-  'LANET', 'MUSLUk', 'NAMAZ', 'ORUÇL', 'PIRIL', 'RIHTM', 'SABİR',
-  'TOPAZ', 'UÇARI', 'ÜZGÜN', 'YANIT', 'ZEVKL',
+  'ZİYAN', 'ŞANSI', 'AÇGÖZ', 'ADALE', 'KABAR', 'KIRIK',
+  'LANET', 'MUSLUK', 'NAMAZ', 'SABİR',
+  'TOPAZ', 'UÇARI', 'ÜZGÜN', 'YANIT',
 ];
 
 const TURKISH_DICTIONARY: Set<string> = new Set(

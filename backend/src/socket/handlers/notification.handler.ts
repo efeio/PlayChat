@@ -1,5 +1,5 @@
 import type { Server, Socket } from 'socket.io';
-import prisma from '../../config/prisma.js';
+import prisma from '../../infrastructure/config/prisma.js';
 import { createNotification } from '../../services/notification.service.js';
 
 export function registerNotificationHandlers(io: Server, socket: Socket) {

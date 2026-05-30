@@ -7,8 +7,8 @@ import {
   resendVerificationEmail,
   forgotPassword,
   resetPassword,
-} from '../services/auth.service.js';
-import env from '../config/env.js';
+} from './auth.service.js';
+import env from '../../infrastructure/config/env.js';
 
 interface RegisterBody {
   username: string;

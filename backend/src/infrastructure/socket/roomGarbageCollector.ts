@@ -1,6 +1,6 @@
 import type { Server } from 'socket.io';
 import prisma from '../config/prisma.js';
-import { getActiveGames, finishGame } from '../services/gameState.service.js';
+import { getActiveGames, finishGame } from '../../modules/game/index.js';
 
 /**
  * Configurable grace period before a zombie room is evicted.

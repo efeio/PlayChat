@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import prisma from '../infrastructure/config/prisma.js';
 
 export interface CreateNotificationInput {
   userId: string;

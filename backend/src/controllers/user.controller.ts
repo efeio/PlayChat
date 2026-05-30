@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import prisma from '../config/prisma.js';
+import prisma from '../infrastructure/config/prisma.js';
 
 export async function getProfile(
   request: FastifyRequest<{ Params: { id: string } }>,

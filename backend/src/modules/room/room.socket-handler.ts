@@ -1,24 +1,19 @@
 import type { Server, Socket } from 'socket.io';
 import bcrypt from 'bcrypt';
-import prisma from '../../config/prisma.js';
-import {
-  addMemberToRoom,
-  removeMemberFromRoom,
-  promoteNextOwner,
-} from '../../services/room.service.js';
-import { handlePlayerLeftRoom } from './game.handler.js';
-import { getActiveGame, getActiveGames, finishGame } from '../../services/gameState.service.js';
+import prisma from '../../infrastructure/config/prisma.js';
+import { addMemberToRoom, removeMemberFromRoom } from './room.service.js';
+import { handlePlayerLeftRoom, sanitizeStateForClient, getActiveGame, getActiveGames, finishGame } from '../game/index.js';
 import {
   trackSocketRoom,
   untrackSocketRoom,
   getSocketRoom,
   sanitizeString,
-} from '../authorizationGuard.js';
+} from '../../infrastructure/socket/authorizationGuard.js';
 import {
   evaluateRoomOnLeave,
   cancelEvictionOnJoin,
-} from '../roomGarbageCollector.js';
-import type { GameState } from '../../games/GameEngine.js';
+} from '../../infrastructure/socket/roomGarbageCollector.js';
+import type { GameState } from '../game/index.js';
 import { GameStatus, MemberRole, MessageType } from '@prisma/client';
 
 interface RoomStateResponse {
@@ -61,7 +56,7 @@ interface RoomStateResponse {
   userRole: string;
 }
 
-export function registerRoomHandlers(io: Server, socket: Socket) {
+export function registerRoomSocketHandlers(io: Server, socket: Socket) {
   const userId = (socket.data as { userId: string }).userId;
   const username = (socket.data as { username: string }).username;
 
@@ -122,7 +117,8 @@ export function registerRoomHandlers(io: Server, socket: Socket) {
 
       if (activeGameRecord) {
         const memoryGame = getActiveGame(activeGameRecord.id);
-        const gameState = memoryGame ? memoryGame.state : activeGameRecord.state as GameState;
+        const rawState = memoryGame ? memoryGame.state : activeGameRecord.state as GameState;
+        const gameState = sanitizeStateForClient(rawState, activeGameRecord.type);
 
         activeGame = {
           gameId: activeGameRecord.id,

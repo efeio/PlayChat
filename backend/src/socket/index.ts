@@ -14,10 +14,10 @@
 import { Server } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
-import env from '../config/env.js';
-import type { JwtPayload } from '../middleware/authenticate.js';
-import { registerRoomHandlers } from './handlers/room.handler.js';
-import { registerGameHandlers, cancelDisconnectTimer } from './handlers/game.handler.js';
+import env from '../infrastructure/config/env.js';
+import type { JwtPayload } from '../modules/auth/index.js';
+import { registerRoomSocketHandlers } from '../modules/room/index.js';
+import { registerGameSocketHandlers, cancelDisconnectTimer } from '../modules/game/index.js';
 import { registerNotificationHandlers } from './handlers/notification.handler.js';
 import {
   isRateLimited,
@@ -27,15 +27,15 @@ import {
   cleanupSocket as cleanupRateLimiterSocket,
   startCleanupInterval as startRateLimiterCleanup,
   stopCleanupInterval as stopRateLimiterCleanup,
-} from './rateLimiter.js';
+} from '../infrastructure/socket/rateLimiter.js';
 import {
   isPayloadSafe,
   untrackSocketRoom,
-} from './authorizationGuard.js';
+} from '../infrastructure/socket/authorizationGuard.js';
 import {
   initRoomGarbageCollector,
   shutdownGarbageCollector,
-} from './roomGarbageCollector.js';
+} from '../infrastructure/socket/roomGarbageCollector.js';
 
 /**
  * Authentication timeout: sockets that don't authenticate
@@ -269,8 +269,8 @@ export function initSocket(httpServer: HttpServer): Server {
         trackUserSocket(decoded.userId, socket.id);
         cancelDisconnectTimer(decoded.userId);
 
-        registerRoomHandlers(io, socket);
-        registerGameHandlers(io, socket);
+        registerRoomSocketHandlers(io, socket);
+        registerGameSocketHandlers(io, socket);
         registerNotificationHandlers(io, socket);
 
         socket.emit('authenticated', {

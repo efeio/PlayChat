@@ -80,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(TOKEN_KEY, jwt);
     setToken(jwt);
     try {
-      const payload = JSON.parse(atob(jwt.split('.')[1]));
+      const base64Url = jwt.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
       const userData: User = {
         id: payload.userId,
         username: payload.username || '',

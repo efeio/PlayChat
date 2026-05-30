@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import prisma from '../config/prisma.js';
-import { createRoom, listRooms, getRoomById, verifyRoomPassword } from '../services/room.service.js';
+import prisma from '../../infrastructure/config/prisma.js';
+import { createRoom, listRooms, getRoomById, verifyRoomPassword } from './room.service.js';
 import { RoomType } from '@prisma/client';
 
 interface CreateRoomBody {
