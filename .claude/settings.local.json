@@ -53,7 +53,17 @@
       "Bash(echo \"BACKEND:$?\")",
       "Bash(echo \"FRONTEND:$?\")",
       "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")",
-      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(xargs -I{} git show {} --stat)",
+      "Bash(jobs -l)",
+      "Bash(xargs -I{} cat /proc/{}/fd/1)",
+      "Bash(xargs -I{} ls /proc/{}/fd/)",
+      "Bash(echo \"PID=$!\")",
+      "Read(//tmp/**)",
+      "Bash(node /tmp/test-gc.mjs)",
+      "Bash(node /tmp/test-gc.cjs)",
+      "Bash(PGPASSWORD=postgres psql *)",
+      "Bash(node /tmp/test-gc-real.cjs)"
     ]
   }
 }
