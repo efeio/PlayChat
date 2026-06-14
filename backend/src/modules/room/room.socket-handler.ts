@@ -249,28 +249,32 @@ export function registerRoomSocketHandlers(io: Server, socket: Socket) {
   });
 
   socket.on('room:leave', async (data?: { roomId?: string }) => {
-    const roomId = data?.roomId || getSocketRoom(socket.id);
-    if (!roomId) return;
+    try {
+      const roomId = data?.roomId || getSocketRoom(socket.id);
+      if (!roomId) return;
 
-    socket.leave(roomId);
-    untrackSocketRoom(socket.id);
+      socket.leave(roomId);
+      untrackSocketRoom(socket.id);
 
-    const sockets = await io.in(roomId).fetchSockets();
-    const hasOtherSockets = sockets.some((s) => s.data.userId === userId && s.id !== socket.id);
+      const sockets = await io.in(roomId).fetchSockets();
+      const hasOtherSockets = sockets.some((s) => s.data.userId === userId && s.id !== socket.id);
 
-    if (!hasOtherSockets) {
-      socket.to(roomId).emit('room:user_left', { userId, username });
-      await handlePlayerLeftRoom(io, userId, roomId);
-      await removeMemberFromRoom(roomId, userId);
+      if (!hasOtherSockets) {
+        socket.to(roomId).emit('room:user_left', { userId, username });
+        await handlePlayerLeftRoom(io, userId, roomId);
+        await removeMemberFromRoom(roomId, userId);
 
-      const updatedMembers = await prisma.roomMember.findMany({
-        where: { roomId },
-        include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
-      });
-      io.to(roomId).emit('room:updated', { id: roomId, members: updatedMembers });
+        const updatedMembers = await prisma.roomMember.findMany({
+          where: { roomId },
+          include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+        });
+        io.to(roomId).emit('room:updated', { id: roomId, members: updatedMembers });
+      }
+
+      await evaluateRoomOnLeave(roomId);
+    } catch {
+      // Non-critical: leave cleanup is best-effort
     }
-
-    await evaluateRoomOnLeave(roomId);
   });
 
   socket.on('room:kick', async (data: { roomId: string; targetUserId: string }, callback?: (res: { error?: string }) => void) => {
@@ -286,6 +290,7 @@ export function registerRoomSocketHandlers(io: Server, socket: Socket) {
         return;
       }
 
+      await handlePlayerLeftRoom(io, targetUserId, roomId);
       await removeMemberFromRoom(roomId, targetUserId);
 
       const targetSockets = await io.in(roomId).fetchSockets();
@@ -451,6 +456,14 @@ export function registerRoomSocketHandlers(io: Server, socket: Socket) {
 
       if (!hasOtherSockets) {
         socket.to(roomId).emit('room:user_left', { userId, username });
+        await handlePlayerLeftRoom(io, userId, roomId);
+        await removeMemberFromRoom(roomId, userId);
+
+        const updatedMembers = await prisma.roomMember.findMany({
+          where: { roomId },
+          include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+        });
+        io.to(roomId).emit('room:updated', { id: roomId, members: updatedMembers });
       }
 
       await evaluateRoomOnLeave(roomId);

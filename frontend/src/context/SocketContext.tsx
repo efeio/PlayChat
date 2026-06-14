@@ -23,7 +23,9 @@ const SocketContext = createContext<SocketContextValue>({
 });
 
 export function SocketProvider({ children }: { children: ReactNode }) {
-  const { token, isAuthenticated: authReady } = useAuth();
+  const { token, isAuthenticated: authReady, logout } = useAuth();
+  const logoutRef = useRef(logout);
+  logoutRef.current = logout;
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isSocketAuthenticated, setIsSocketAuthenticated] = useState(false);
@@ -71,6 +73,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     s.on('session:expired', () => {
       setIsSocketAuthenticated(false);
+      s.disconnect();
+      logoutRef.current();
     });
 
     s.on('disconnect', () => {

@@ -1,7 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import prisma from '../../infrastructure/config/prisma.js';
 import type { GameState } from './engines/index.js';
-import { Wordle } from './engines/index.js';
 import {
   getActiveGames,
   getActiveGame,
@@ -293,10 +292,6 @@ export function registerGameSocketHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      if (engine instanceof Wordle && !engine.isValidDictionaryWord(move)) {
-        if (callback) callback({ error: 'invalid_word' });
-        return;
-      }
 
       const newState = engine.applyMove(state, move, userId);
 

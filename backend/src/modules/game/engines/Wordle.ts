@@ -51,33 +51,6 @@ const TARGET_WORDS: string[] = [
   'YÜZDE', 'YÜZME', 'ZAMAN', 'ZAYIF', 'ZEHİR', 'ZİRVE',
 ];
 
-const VALID_GUESSES: string[] = [
-  ...TARGET_WORDS,
-  'ACELE', 'AÇLIK', 'AFYON', 'AHŞAP', 'AKICI', 'AKREP', 'ALÇAK',
-  'ALMAK', 'ARACI', 'ARIZA', 'ARTAN', 'ARTIK', 'AYLIK', 'AZAMI',
-  'BAĞCI', 'BAKIŞ', 'BANYO', 'BASIN', 'BASIT', 'BATIK', 'BAYAT',
-  'BEKAR', 'BİLEK', 'BİRİM', 'BÖYLE', 'BUDAK', 'BURSA', 'ÇADIR',
-  'ÇAKIL', 'ÇALIŞ', 'ÇIKAR', 'ÇİZGİ', 'ÇOĞUL', 'ÇÖZÜM', 'DAĞCI',
-  'DAMAR', 'DAMLA', 'DEĞER', 'DEVAM', 'DİKİŞ', 'DİZEL', 'DOLAR',
-  'DÜŞÜK', 'DÜŞÜN', 'DÜZEN', 'EMSAL', 'ENGİN', 'ERKEK', 'ESNAF',
-  'EŞARP', 'EŞSİZ', 'FAKAT', 'FIRIN', 'FLORA', 'GELEN', 'GENİŞ',
-  'GİRİŞ', 'GİZLİ', 'GÖZDE', 'GÜMLÜ', 'HİSSE', 'HIZLI', 'İKLİM',
-  'İMKAN', 'İSTİF', 'KAÇAK', 'KAÇIR', 'KAHİN', 'KALIŞ', 'KAYIT',
-  'KEŞİF', 'KILIF', 'KİRAZ', 'KOYUN', 'KUŞAK', 'LİSAN', 'MADEN',
-  'MANAV', 'MECAZ', 'MİRAS', 'MOBİL', 'MORAL', 'NİYET', 'OLMAZ',
-  'ONLAR', 'ÖRGÜT', 'ÖLÇÜM', 'PANDA', 'PATIK', 'PIRIL', 'RAKIT',
-  'SABİT', 'SAĞIR', 'SATIN', 'SEÇİM', 'SERGİ', 'SEYİR', 'SİNİR',
-  'SOYUT', 'TABİP', 'TABUR', 'TUTAR', 'UÇMAK', 'VAKIF', 'YAĞLI',
-  'YAPIŞ', 'YAYIN', 'YAZGI', 'YENİK', 'YOĞUR', 'ZATEN', 'ZİHİN',
-  'ZİYAN', 'ŞANSI', 'AÇGÖZ', 'ADALE', 'KABAR', 'KIRIK',
-  'LANET', 'MUSLUK', 'NAMAZ', 'SABİR',
-  'TOPAZ', 'UÇARI', 'ÜZGÜN', 'YANIT',
-];
-
-const TURKISH_DICTIONARY: Set<string> = new Set(
-  VALID_GUESSES.map(w => turkishUpper(w.trim()))
-    .filter(w => w.length === WORD_LENGTH)
-);
 
 type LetterResult = 'correct' | 'present' | 'absent';
 
@@ -133,13 +106,6 @@ export class Wordle extends GameEngine {
     return true;
   }
 
-  isValidDictionaryWord(move: Move): boolean {
-    const m = move as WordleMove;
-    if (!m.word || typeof m.word !== 'string') return false;
-    const word = turkishUpper(m.word.trim());
-    if (word.length !== WORD_LENGTH) return false;
-    return TURKISH_DICTIONARY.has(word);
-  }
 
   applyMove(state: GameState, move: Move, userId: string): WordleState {
     const s = state as WordleState;

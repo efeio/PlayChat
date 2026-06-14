@@ -59,8 +59,8 @@ export function GameResult({ result, players, currentUserId, gameType, gameState
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-overlay backdrop-blur-md animate-modal-in" role="dialog" aria-modal="true" aria-label="Oyun sonucu">
-      <div ref={modalRef} className="w-full max-w-sm mx-4 bg-bg-card border border-border-default rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-overlay backdrop-blur-md animate-modal-in" role="dialog" aria-modal="true" aria-label="Oyun sonucu" onClick={onClose}>
+      <div ref={modalRef} className="w-full max-w-sm mx-4 bg-bg-card border border-border-default rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Result Banner */}
         <div className={`px-6 py-8 text-center ${
           isDraw

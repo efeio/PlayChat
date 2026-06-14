@@ -294,68 +294,44 @@ function PieChart({ gameStats }: { gameStats: UserStat[] }) {
     );
   }
 
-  let cumulativePercent = 0;
+  const size = 176;
+  const strokeWidth = 28;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  let cumulativeOffset = 0;
   const segments = gameStats
     .filter((s) => s.gamesPlayed > 0)
     .map((stat) => {
-      const percent = (stat.gamesPlayed / total) * 100;
-      const startPercent = cumulativePercent;
-      cumulativePercent += percent;
-      return { ...stat, percent, startPercent };
+      const fraction = stat.gamesPlayed / total;
+      const dash = fraction * circumference;
+      const offset = cumulativeOffset;
+      cumulativeOffset += dash;
+      return { ...stat, dash, offset };
     });
 
-  const getCoordinatesForPercent = (percent: number) => {
-    const x = Math.cos(2 * Math.PI * (percent / 100));
-    const y = Math.sin(2 * Math.PI * (percent / 100));
-    return [x, y];
-  };
-
   return (
-    <svg viewBox="-1 -1 2 2" className="w-44 h-44" style={{ transform: 'rotate(-90deg)' }}>
-      {segments.map((segment) => {
-        const [startX, startY] = getCoordinatesForPercent(segment.startPercent);
-        const [endX, endY] = getCoordinatesForPercent(segment.startPercent + segment.percent);
-        const largeArcFlag = segment.percent > 50 ? 1 : 0;
-        const pathData = [
-          `M ${startX} ${startY}`,
-          `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-          `L 0 0`,
-        ].join(' ');
-
-        return (
-          <path
+    <div className="relative w-44 h-44">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90">
+        {segments.map((segment) => (
+          <circle
             key={segment.id}
-            d={pathData}
-            fill={GAME_COLORS[segment.gameType] || '#6b7280'}
-            stroke="var(--color-bg-card)"
-            strokeWidth="0.04"
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={GAME_COLORS[segment.gameType] || '#6b7280'}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${segment.dash} ${circumference - segment.dash}`}
+            strokeDashoffset={-segment.offset}
+            strokeLinecap="butt"
           />
-        );
-      })}
-      <circle cx="0" cy="0" r="0.55" fill="var(--color-bg-card)" />
-      <text
-        x="0"
-        y="0.05"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill="var(--color-text-primary)"
-        fontSize="0.3"
-        fontWeight="bold"
-        style={{ transform: 'rotate(90deg)' }}
-      >
-        {total}
-      </text>
-      <text
-        x="0"
-        y="0.3"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill="var(--color-text-muted)"
-        fontSize="0.14"
-        style={{ transform: 'rotate(90deg)' }}
-      >
-        oyun
-      </text>
-    </svg>
+        ))}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-bold text-text-primary leading-none">{total}</span>
+        <span className="text-xs text-text-muted mt-0.5">oyun</span>
+      </div>
+    </div>
   );
 }

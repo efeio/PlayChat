@@ -73,7 +73,7 @@ export function RockPaperScissors({ gameState, onMove, currentUserId, players }:
     players.find((p) => p.userId === id)?.displayName || id;
 
   const handleChoice = (choice: RPSChoice) => {
-    if (hasChosen || isFinished) return;
+    if (hasChosen || isFinished || selected) return;
     setSelected(choice);
     onMove({ choice });
   };

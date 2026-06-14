@@ -52,7 +52,8 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(echo \"BACKEND:$?\")",
       "Bash(echo \"FRONTEND:$?\")",
-      "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")"
     ]
   }
 }

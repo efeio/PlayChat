@@ -202,6 +202,9 @@ export function Room() {
         addToast('error', res.error);
       } else {
         joinedRef.current = true;
+        if (password) {
+          navigate(`/room/${roomId}`, { replace: true });
+        }
         recoverState();
       }
     });
