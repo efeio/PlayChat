@@ -145,7 +145,8 @@ export class Hangman extends GameEngine {
     };
 
     let winner: string | null = null;
-    if (s.word.split('').every((c) => newGuessed.includes(c))) {
+    const allGuessed = Object.values(newPlayerStates).flatMap(ps => ps.guessedLetters);
+    if (s.word.split('').every((c) => allGuessed.includes(c))) {
       winner = userId;
     }
 
