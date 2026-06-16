@@ -20,13 +20,13 @@ export async function authenticate(
   const authHeader = request.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    reply.status(401).send({ error: 'Authentication required' });
+    reply.status(401).send({ error: 'Oturum açmanız gerekiyor' });
     return;
   }
 
   const token = authHeader.split(' ')[1];
   if (!token) {
-    reply.status(401).send({ error: 'Invalid token format' });
+    reply.status(401).send({ error: 'Geçersiz token formatı' });
     return;
   }
 
@@ -34,7 +34,7 @@ export async function authenticate(
     const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
     request.user = decoded;
   } catch {
-    reply.status(401).send({ error: 'Invalid or expired token' });
+    reply.status(401).send({ error: 'Geçersiz veya süresi dolmuş oturum' });
     return;
   }
 }

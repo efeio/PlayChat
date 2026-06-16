@@ -59,8 +59,8 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   if (existingUser) {
     throw new Error(
       existingUser.email === input.email
-        ? 'Email already in use'
-        : 'Username already taken'
+        ? 'Bu e-posta adresi zaten kullanılıyor'
+        : 'Bu kullanıcı adı zaten alınmış'
     );
   }
 
@@ -87,9 +87,9 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   } catch (err: unknown) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
       const target = (err as { meta?: { target?: string[] } }).meta?.target || [];
-      if (target.includes('email')) throw new Error('Email already in use');
-      if (target.includes('username')) throw new Error('Username already taken');
-      throw new Error('Email or username already in use');
+      if (target.includes('email')) throw new Error('Bu e-posta adresi zaten kullanılıyor');
+      if (target.includes('username')) throw new Error('Bu kullanıcı adı zaten alınmış');
+      throw new Error('E-posta veya kullanıcı adı zaten kullanılıyor');
     }
     throw err;
   }
@@ -117,13 +117,13 @@ export async function loginUser(input: LoginInput): Promise<AuthResult> {
   });
 
   if (!user || !user.passwordHash) {
-    throw new Error('Invalid email or password');
+    throw new Error('Geçersiz e-posta veya şifre');
   }
 
   const validPassword = await bcrypt.compare(input.password, user.passwordHash);
 
   if (!validPassword) {
-    throw new Error('Invalid email or password');
+    throw new Error('Geçersiz e-posta veya şifre');
   }
 
   const token = generateToken(user.id, user.username);
@@ -210,7 +210,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
   });
 
   if (!user) {
-    throw new Error('Invalid or expired verification token');
+    throw new Error('Geçersiz veya süresi dolmuş doğrulama bağlantısı');
   }
 
   await prisma.user.update({
@@ -222,7 +222,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
     },
   });
 
-  return { success: true, message: 'Email verified successfully' };
+  return { success: true, message: 'E-posta başarıyla doğrulandı' };
 }
 
 export async function resendVerificationEmail(email: string): Promise<void> {
@@ -231,11 +231,11 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new Error('Kullanıcı bulunamadı');
   }
 
   if (user.isVerified) {
-    throw new Error('Email is already verified');
+    throw new Error('E-posta zaten doğrulanmış');
   }
 
   const emailVerifyToken = generateSecureToken();
@@ -271,7 +271,7 @@ export async function forgotPassword(email: string): Promise<void> {
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
   if (newPassword.length < 6) {
-    throw new Error('Password must be at least 6 characters');
+    throw new Error('Şifre en az 6 karakter olmalıdır');
   }
 
   const user = await prisma.user.findFirst({
@@ -282,7 +282,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
   });
 
   if (!user) {
-    throw new Error('Invalid or expired reset token');
+    throw new Error('Geçersiz veya süresi dolmuş sıfırlama bağlantısı');
   }
 
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);

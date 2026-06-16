@@ -42,34 +42,34 @@ export async function register(
   const { username, displayName, email, password } = request.body;
 
   if (!username || !displayName || !email || !password) {
-    return reply.status(400).send({ error: 'All fields are required' });
+    return reply.status(400).send({ error: 'Tüm alanlar zorunludur' });
   }
 
   if (password.length < 6) {
-    return reply.status(400).send({ error: 'Password must be at least 6 characters' });
+    return reply.status(400).send({ error: 'Şifre en az 6 karakter olmalıdır' });
   }
 
   if (password.length > 128) {
-    return reply.status(400).send({ error: 'Password must be at most 128 characters' });
+    return reply.status(400).send({ error: 'Şifre en fazla 128 karakter olabilir' });
   }
 
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-    return reply.status(400).send({ error: 'Username must be 3-20 characters (letters, numbers, underscore)' });
+    return reply.status(400).send({ error: 'Kullanıcı adı 3-20 karakter olmalı (harf, rakam, alt çizgi)' });
   }
 
   if (displayName.trim().length < 2 || displayName.trim().length > 30) {
-    return reply.status(400).send({ error: 'Display name must be 2-30 characters' });
+    return reply.status(400).send({ error: 'Görünen ad 2-30 karakter olmalıdır' });
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
-    return reply.status(400).send({ error: 'Invalid email format' });
+    return reply.status(400).send({ error: 'Geçersiz e-posta formatı' });
   }
 
   try {
     const result = await registerUser({ username, displayName, email, password });
     return reply.status(201).send(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Registration failed';
+    const message = err instanceof Error ? err.message : 'Kayıt başarısız oldu';
     return reply.status(400).send({ error: message });
   }
 }
@@ -81,14 +81,14 @@ export async function login(
   const { email, password } = request.body;
 
   if (!email || !password) {
-    return reply.status(400).send({ error: 'Email and password are required' });
+    return reply.status(400).send({ error: 'E-posta ve şifre gereklidir' });
   }
 
   try {
     const result = await loginUser({ email, password });
     return reply.status(200).send(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Login failed';
+    const message = err instanceof Error ? err.message : 'Giriş başarısız oldu';
     return reply.status(401).send({ error: message });
   }
 }
@@ -98,7 +98,7 @@ export async function googleOAuthStart(
   reply: FastifyReply
 ) {
   if (!env.GOOGLE_CLIENT_ID) {
-    return reply.status(503).send({ error: 'Google OAuth is not configured' });
+    return reply.status(503).send({ error: 'Google OAuth yapılandırılmamış' });
   }
 
   const params = new URLSearchParams({
@@ -177,14 +177,14 @@ export async function verifyEmailHandler(
   const { token } = request.body;
 
   if (!token) {
-    return reply.status(400).send({ error: 'Verification token is required' });
+    return reply.status(400).send({ error: 'Doğrulama kodu gereklidir' });
   }
 
   try {
     const result = await verifyEmail(token);
     return reply.send(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Verification failed';
+    const message = err instanceof Error ? err.message : 'Doğrulama başarısız oldu';
     return reply.status(400).send({ error: message });
   }
 }
@@ -196,14 +196,14 @@ export async function resendVerificationHandler(
   const { email } = request.body;
 
   if (!email) {
-    return reply.status(400).send({ error: 'Email is required' });
+    return reply.status(400).send({ error: 'E-posta gereklidir' });
   }
 
   try {
     await resendVerificationEmail(email);
-    return reply.send({ success: true, message: 'Verification email sent' });
+    return reply.send({ success: true, message: 'Doğrulama e-postası gönderildi' });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to send verification email';
+    const message = err instanceof Error ? err.message : 'Doğrulama e-postası gönderilemedi';
     return reply.status(400).send({ error: message });
   }
 }
@@ -215,14 +215,14 @@ export async function forgotPasswordHandler(
   const { email } = request.body;
 
   if (!email) {
-    return reply.status(400).send({ error: 'Email is required' });
+    return reply.status(400).send({ error: 'E-posta gereklidir' });
   }
 
   try {
     await forgotPassword(email);
-    return reply.send({ success: true, message: 'If the email exists, a reset link has been sent' });
+    return reply.send({ success: true, message: 'E-posta mevcutsa sıfırlama bağlantısı gönderildi' });
   } catch {
-    return reply.send({ success: true, message: 'If the email exists, a reset link has been sent' });
+    return reply.send({ success: true, message: 'E-posta mevcutsa sıfırlama bağlantısı gönderildi' });
   }
 }
 
@@ -233,18 +233,18 @@ export async function resetPasswordHandler(
   const { token, password } = request.body;
 
   if (!token || !password) {
-    return reply.status(400).send({ error: 'Token and password are required' });
+    return reply.status(400).send({ error: 'Token ve şifre gereklidir' });
   }
 
   if (password.length < 6) {
-    return reply.status(400).send({ error: 'Password must be at least 6 characters' });
+    return reply.status(400).send({ error: 'Şifre en az 6 karakter olmalıdır' });
   }
 
   try {
     await resetPassword(token, password);
-    return reply.send({ success: true, message: 'Password reset successfully' });
+    return reply.send({ success: true, message: 'Şifre başarıyla sıfırlandı' });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Password reset failed';
+    const message = err instanceof Error ? err.message : 'Şifre sıfırlama başarısız oldu';
     return reply.status(400).send({ error: message });
   }
 }
